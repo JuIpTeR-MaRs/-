@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>系统登录 - 智慧宿舍报修与物业巡检系统</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --glass-bg: rgba(255, 255, 255, 0.08);
+      --glass-border: rgba(255, 255, 255, 0.15);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --text-main: #ffffff;
+      --text-muted: #9ca3af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+
+    body {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* Abstract background animations */
+    .bg-shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: 1;
+      animation: float 10s infinite ease-in-out alternate;
+    }
+    .shape1 { width: 500px; height: 500px; background: rgba(99, 102, 241, 0.3); top: -100px; left: -100px; }
+    .shape2 { width: 600px; height: 600px; background: rgba(236, 72, 153, 0.2); bottom: -150px; right: -150px; animation-delay: -5s; }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, 50px) scale(1.1); }
+    }
+
+    .login-container {
+      width: 420px;
+      padding: 40px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      box-shadow: var(--glass-shadow);
+      z-index: 10;
+      animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    @keyframes slideUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo-area {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .logo-area svg {
+      width: 48px;
+      height: 48px;
+      color: var(--primary);
+      margin-bottom: 15px;
+    }
+
+    .logo-area h1 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      background: -webkit-linear-gradient(45deg, #a5b4fc, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .logo-area p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    
+    .form-control {
+      width: 100%;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--glass-border);
+      color: white;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 15px;
+      transition: all 0.3s;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: rgba(0,0,0,0.4);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+    }
+
+    .btn {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99,102,241,0.4);
+    }
+
+    .quick-logins {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      gap: 10px;
+    }
+    .quick-logins span {
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.05);
+      transition: all 0.2s;
+      flex: 1;
+      text-align: center;
+    }
+    .quick-logins span:hover {
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-50px);
+      background: #ef4444; color: white;
+      padding: 12px 24px; border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      opacity: 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1000; font-weight: 600; font-size: 14px;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <div class="bg-shape shape1"></div>
+  <div class="bg-shape shape2"></div>
+
+  <div class="login-container">
+    <div class="logo-area">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+      </svg>
+      <h1>智慧宿舍报修系统</h1>
+      <p>期末考核大作业演示系统</p>
+    </div>
+
+    <div class="form-group">
+      <label>学号 / 工号 (用户名)</label>
+      <input type="text" id="loginUser" class="form-control" placeholder="请输入您的账号" autocomplete="off">
+    </div>
+    
+    <div class="form-group">
+      <label>系统密码</label>
+      <input type="password" id="loginPass" class="form-control" placeholder="请输入密码" autocomplete="off">
+    </div>
+
+    <button class="btn" onclick="doLogin()" id="submitBtn">
+      安全登录
+      <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+    </button>
+
+    <div class="quick-logins">
+      <span onclick="fillDemo('student1')">我是学生</span>
+      <span onclick="fillDemo('worker1')">我是师傅</span>
+      <span onclick="fillDemo('admin')">我是宿管</span>
+    </div>
+  </div>
+
+  <div id="toast">登录失败，请检查账号密码</div>
+
+  <script>
+    // Redirect if already logged in
+    if (localStorage.getItem('dorm_token')) {
+      window.location.href = '/';
+    }
+
+    const API_BASE = 'http://127.0.0.1:8080/api/v1';
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function fillDemo(username) {
+      document.getElementById('loginUser').value = username;
+      document.getElementById('loginPass').value = '123456';
+    }
+
+    // Default fill
+    fillDemo('student1');
+
+    async function doLogin() {
+      const u = document.getElementById('loginUser').value.trim();
+      const p = document.getElementById('loginPass').value.trim();
+      const btn = document.getElementById('submitBtn');
+
+      if (!u || !p) { showToast('账号和密码不能为空！'); return; }
+
+      btn.innerHTML = '正在登录...';
+      btn.style.opacity = '0.7';
+
+      try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        
+        const data = await res.json();
+        
+        if (data.code === 0) {
+          localStorage.setItem('dorm_token', data.data.token);
+          localStorage.setItem('dorm_user', JSON.stringify(data.data.user));
+          // Success! Add a nice success style to button
+          btn.innerHTML = '登录成功！正在跳转...';
+          btn.style.background = '#10b981';
+          setTimeout(() => { window.location.href = '/'; }, 600);
+        } else {
+          showToast(data.msg || '登录失败');
+        }
+      } catch (err) {
+        showToast('网络请求失败，请检查后台是否已启动');
+      } finally {
+        if (btn.innerHTML !== '登录成功！正在跳转...') {
+          btn.innerHTML = `安全登录 <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
+          btn.style.opacity = '1';
+        }
+      }
+    }
+
+    // Support Enter key
+    document.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') doLogin();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智慧宿舍报修与物业巡检大屏系统</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --glass-bg: rgba(255, 255, 255, 0.08);
+      --glass-border: rgba(255, 255, 255, 0.15);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --text-main: #ffffff;
+      --text-muted: #9ca3af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      /* Premium dark gradient background */
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Abstract shapes for background aesthetics */
+    .bg-shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: -1;
+      animation: float 10s infinite ease-in-out alternate;
+    }
+    .shape1 { width: 400px; height: 400px; background: rgba(99, 102, 241, 0.3); top: -100px; left: -100px; }
+    .shape2 { width: 500px; height: 500px; background: rgba(236, 72, 153, 0.2); bottom: -150px; right: -100px; animation-delay: -5s; }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, 50px) scale(1.1); }
+    }
+
+    header {
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--glass-border);
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+    
+    header h1 { font-size: 24px; font-weight: 600; letter-spacing: 1px; }
+
+    .user-info { display: flex; align-items: center; gap: 15px; }
+    .user-info span { font-size: 14px; color: var(--text-muted); }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+    .btn:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
+    .btn.outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+    .btn.outline:hover { background: rgba(99,102,241,0.1); }
+    .btn.small { padding: 6px 12px; font-size: 12px; }
+    .btn.success { background: var(--success); }
+    .btn.success:hover { background: #059669; box-shadow: 0 4px 12px rgba(16,185,129,0.4); }
+
+    /* Glass Container */
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: var(--glass-shadow);
+    }
+
+    .main-container {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 30px;
+      padding: 40px;
+      flex: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    h2 { font-size: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; }
+
+    /* Forms */
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-muted); }
+    .form-control {
+      width: 100%;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--glass-border);
+      color: white;
+      padding: 12px;
+      border-radius: 8px;
+      font-family: inherit;
+      transition: border-color 0.3s;
+    }
+    .form-control:focus { outline: none; border-color: var(--primary); background: rgba(0,0,0,0.3); }
+    textarea.form-control { resize: vertical; min-height: 100px; }
+
+    /* Cards (Orders) */
+    .order-list { display: flex; flex-direction: column; gap: 15px; max-height: 600px; overflow-y: auto; padding-right: 5px; }
+    .order-list::-webkit-scrollbar { width: 6px; }
+    .order-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+    
+    .order-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 16px;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .order-card:hover { transform: translateY(-3px); background: rgba(255,255,255,0.06); }
+    
+    .order-header { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center;}
+    .order-id { font-size: 12px; color: var(--text-muted); }
+    .badge { 
+      padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; 
+      background: rgba(255,255,255,0.1); 
+    }
+    .badge.待指派 { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+    .badge.已指派 { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid rgba(56,189,248,0.3); }
+    .badge.维修中 { background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
+    .badge.已完工 { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+    .badge.已评价 { background: rgba(236, 72, 153, 0.2); color: #f472b6; border: 1px solid rgba(236,72,153,0.3); }
+
+    .order-content { font-size: 15px; margin-bottom: 12px; line-height: 1.5; }
+    .order-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px; }
+    
+    /* Leaderboard */
+    .leaderboard { display: flex; flex-direction: column; gap: 10px; }
+    .lb-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+      border-radius: 8px;
+      border-left: 3px solid var(--warning);
+    }
+    .lb-rank { font-size: 18px; font-weight: bold; color: var(--warning); width: 30px;}
+    .lb-name { flex: 1; font-weight: 600; }
+    .lb-score { display: flex; align-items: center; gap: 5px; color: #fcd34d; }
+    .lb-score svg { width: 16px; height: 16px; fill: currentColor; }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(5px);
+      display: none; justify-content: center; align-items: center; z-index: 100;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .modal-overlay.active { display: flex; opacity: 1; }
+    .modal-content { width: 400px; max-width: 90%; }
+
+    /* Utility */
+    .hidden { display: none !important; }
+    .stars { display: flex; gap: 5px; cursor: pointer; }
+    .star { font-size: 24px; color: var(--text-muted); transition: color 0.2s; }
+    .star:hover, .star.active { color: #fcd34d; }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 30px; right: 30px;
+      background: var(--success); color: white;
+      padding: 12px 24px; border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transform: translateY(100px); opacity: 0;
+      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      z-index: 1000; font-weight: 600;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.error { background: #ef4444; }
+
+  </style>
+</head>
+<body>
+
+  <!-- Abstract Background -->
+  <div class="bg-shape shape1"></div>
+  <div class="bg-shape shape2"></div>
+
+  <!-- Header -->
+  <header>
+    <h1>智慧宿舍报修大屏</h1>
+    <div class="user-info" id="userInfoArea">
+      <span id="welcomeText">加载中...</span>
+      <button class="btn outline small hidden" id="logoutBtn" onclick="logout()">安全退出</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="main-container">
+    
+    <!-- Left Column: Operations -->
+    <div class="left-col">
+      <div class="glass" id="opPanel">
+        <h2>操作控制台</h2>
+        <div id="loginPrompt" style="color: var(--text-muted); text-align: center; padding: 40px 0;">
+          <svg style="width: 48px; height: 48px; margin-bottom: 15px; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+          <p>请先登录以解锁操作面板</p>
+        </div>
+
+        <!-- Student Form -->
+        <div id="studentForm" class="hidden">
+          <div class="form-group">
+            <label>报修内容 (10-200字)</label>
+            <textarea id="repairContent" class="form-control" placeholder="请详细描述需要维修的问题..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>联系电话</label>
+            <input type="text" id="repairPhone" class="form-control" placeholder="11位手机号码">
+          </div>
+          <button class="btn" style="width: 100%; margin-top: 10px;" onclick="submitRepair()">🚀 立即提交报修</button>
+        </div>
+
+        <!-- Admin Info -->
+        <div id="adminPanel" class="hidden">
+          <p style="color: #9ca3af; margin-bottom: 15px;">您是宿管/管理员，可以在右侧的报修列表中直接进行师傅的指派。</p>
+          <button class="btn outline" style="width: 100%;" onclick="loadOrders()">🔄 刷新全校实时工单</button>
+        </div>
+
+        <!-- Worker Info -->
+        <div id="workerPanel" class="hidden">
+          <p style="color: #9ca3af; margin-bottom: 15px;">您是维修师傅，可以在右侧接单并处理您的专属工单。</p>
+          <button class="btn outline" style="width: 100%;" onclick="loadOrders()">🔄 刷新我的工单</button>
+        </div>
+      </div>
+
+      <div class="glass" style="margin-top: 30px;">
+        <h2>🏆 本月金牌师傅排行榜</h2>
+        <div class="leaderboard" id="leaderboardList">
+          <div style="color: var(--text-muted); text-align: center; padding: 20px;">数据加载中...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Data Display -->
+    <div class="right-col">
+      <div class="glass" style="height: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px;">
+          <h2 style="border: none; margin: 0; padding: 0;">实时工单大厅</h2>
+          <span class="badge" style="background: rgba(255,255,255,0.1);" id="orderCount">总计: 0</span>
+        </div>
+        
+        <div class="order-list" id="orderList">
+          <div style="color: var(--text-muted); text-align: center; padding: 60px;">
+            请先登录查看工单数据
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Modal Removed -->
+
+  <!-- Evaluate Modal -->
+  <div class="modal-overlay" id="evalModal">
+    <div class="glass modal-content">
+      <h2>工单评价打分</h2>
+      <p style="color: var(--text-muted); margin-bottom: 15px;">您的评价将直接影响该师傅的月末绩效榜单！</p>
+      <div class="form-group" style="text-align: center; margin: 20px 0;">
+        <div class="stars" id="starRating" style="justify-content: center;">
+          <span class="star" data-val="1">★</span>
+          <span class="star" data-val="2">★</span>
+          <span class="star" data-val="3">★</span>
+          <span class="star" data-val="4">★</span>
+          <span class="star" data-val="5">★</span>
+        </div>
+        <div id="starText" style="margin-top: 10px; color: var(--warning); font-weight: bold;">0 分</div>
+      </div>
+      <input type="hidden" id="evalOrderId">
+      <div style="display: flex; gap: 10px;">
+        <button class="btn" style="flex: 1;" onclick="submitEval()">提交好评</button>
+        <button class="btn outline" onclick="closeEvalModal()">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast">操作成功</div>
+
+  <script>
+    const API_BASE = 'http://127.0.0.1:8080/api/v1';
+    let currentToken = localStorage.getItem('dorm_token') || '';
+    let currentUser = JSON.parse(localStorage.getItem('dorm_user') || 'null');
+    let currentRating = 0;
+
+    // Toast Notification
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.className = isError ? 'show error' : 'show';
+      setTimeout(() => toast.className = '', 3000);
+    }
+
+    // Check auth state immediately
+    if (!currentToken || !currentUser) {
+      window.location.href = '/login';
+    }
+
+    // Modal Controls
+    function openEvalModal(id) { 
+      document.getElementById('evalOrderId').value = id;
+      currentRating = 5; updateStars(5); // Default 5 stars
+      document.getElementById('evalModal').classList.add('active'); 
+    }
+    function closeEvalModal() { document.getElementById('evalModal').classList.remove('active'); }
+
+    // API Helper
+    async function apiCall(endpoint, method = 'GET', body = null) {
+      const headers = { 'Content-Type': 'application/json' };
+      if (currentToken) headers['Authorization'] = `Bearer ${currentToken}`;
+      
+      try {
+        const res = await fetch(`${API_BASE}${endpoint}`, {
+          method, headers, body: body ? JSON.stringify(body) : null
+        });
+        const data = await res.json();
+        if (res.status === 500) { showToast('服务端异常 (500)', true); return null; }
+        if (data.code !== 0) { showToast(data.msg, true); return null; }
+        return data.data;
+      } catch (err) {
+        showToast('网络请求失败', true);
+        console.error(err);
+        return null;
+      }
+    }
+
+    function logout() {
+      currentToken = ''; currentUser = null;
+      localStorage.removeItem('dorm_token');
+      localStorage.removeItem('dorm_user');
+      window.location.href = '/login';
+    }
+
+    // UI Updates
+    function initDashboard() {
+      const infoArea = document.getElementById('welcomeText');
+      const loginBtn = document.getElementById('loginBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const loginPrompt = document.getElementById('loginPrompt');
+      const sForm = document.getElementById('studentForm');
+      const aPanel = document.getElementById('adminPanel');
+      const wPanel = document.getElementById('workerPanel');
+
+      // Reset panels
+      loginPrompt.classList.remove('hidden');
+      sForm.classList.add('hidden');
+      aPanel.classList.add('hidden');
+      wPanel.classList.add('hidden');
+
+      if (currentUser) {
+        infoArea.textContent = `[${currentUser.role}] ${currentUser.real_name || currentUser.username}`;
+        logoutBtn.classList.remove('hidden');
+        loginPrompt.classList.add('hidden');
+
+        if (currentUser.role === 'Student') sForm.classList.remove('hidden');
+        else if (currentUser.role === 'Admin') aPanel.classList.remove('hidden');
+        else if (currentUser.role === 'Worker') wPanel.classList.remove('hidden');
+
+        loadOrders();
+        loadLeaderboard();
+      } else {
+        window.location.href = '/login';
+      }
+    }
+
+    // Submit Repair
+    async function submitRepair() {
+      const content = document.getElementById('repairContent').value;
+      const phone = document.getElementById('repairPhone').value;
+      
+      const res = await apiCall('/workorder', 'POST', { content, contact_phone: phone, image_url: '' });
+      if (res !== null) { // success is null data but code 0
+        showToast('🎉 报修提交成功！');
+        document.getElementById('repairContent').value = '';
+        document.getElementById('repairPhone').value = '';
+        loadOrders();
+      }
+    }
+
+    // Load Orders
+    async function loadOrders() {
+      const res = await apiCall('/workorder?page_size=20');
+      if (!res) return;
+      
+      document.getElementById('orderCount').textContent = `总计: ${res.total}`;
+      const list = document.getElementById('orderList');
+      list.innerHTML = '';
+      
+      if (res.items.length === 0) {
+        list.innerHTML = '<div style="text-align:center; color:#9ca3af; margin-top: 40px;">暂无相关工单记录</div>';
+        return;
+      }
+
+      res.items.forEach(order => {
+        let actionHtml = '';
+        
+        // Dynamic actions based on role and status
+        if (currentUser.role === 'Admin' && order.status === '待指派') {
+          // Hardcoded worker id 3 for demo, in real world we need a worker selector
+          actionHtml = `<button class="btn small success" onclick="assignWorker(${order.id}, 3)">指派给李四(ID:3)</button>`;
+        } 
+        else if (currentUser.role === 'Worker' && order.status === '已指派') {
+          actionHtml = `<button class="btn small" onclick="updateStatus(${order.id}, '维修中')">开始处理</button>`;
+        }
+        else if (currentUser.role === 'Worker' && order.status === '维修中') {
+          actionHtml = `<button class="btn small success" onclick="updateStatus(${order.id}, '已完工')">完成维保</button>`;
+        }
+        else if (currentUser.role === 'Student' && order.status === '已完工') {
+          actionHtml = `<button class="btn small" style="background:#ec4899;" onclick="openEvalModal(${order.id})">⭐ 立即评价</button>`;
+        }
+        else if (order.status === '已评价') {
+          actionHtml = `<span style="color:#f472b6; font-size:14px; font-weight:bold;">学生打分: ${order.rating} 星</span>`;
+        }
+
+        const dateStr = new Date(order.created_at).toLocaleString('zh-CN');
+        const workerText = order.worker ? ` | 师傅: ${order.worker.real_name}` : '';
+
+        list.innerHTML += `
+          <div class="order-card">
+            <div class="order-header">
+              <span class="order-id">工单号: #${order.id} | 发起人: ${order.user.real_name}${workerText}</span>
+              <span class="badge ${order.status}">${order.status}</span>
+            </div>
+            <div class="order-content">${order.content}</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">联系电话: ${order.contact_phone}</div>
+            <div class="order-footer">
+              <span style="font-size: 12px; color: rgba(255,255,255,0.4);">${dateStr}</span>
+              <div class="actions">${actionHtml}</div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // Admin Assign
+    async function assignWorker(orderId, workerId) {
+      const res = await apiCall(`/workorder/${orderId}/assign`, 'PUT', { worker_id: workerId });
+      if (res !== null) { showToast('工单指派成功！'); loadOrders(); }
+    }
+
+    // Worker Update Status
+    async function updateStatus(orderId, status) {
+      const res = await apiCall(`/workorder/${orderId}/status`, 'PUT', { status });
+      if (res !== null) { showToast('状态更新成功！'); loadOrders(); }
+    }
+
+    // Star Rating Logic
+    const stars = document.querySelectorAll('.star');
+    stars.forEach(s => {
+      s.addEventListener('click', (e) => updateStars(parseInt(e.target.dataset.val)));
+    });
+    function updateStars(val) {
+      currentRating = val;
+      stars.forEach(s => {
+        if (parseInt(s.dataset.val) <= val) s.classList.add('active');
+        else s.classList.remove('active');
+      });
+      document.getElementById('starText').textContent = val + ' 分';
+    }
+
+    // Student Evaluate
+    async function submitEval() {
+      const id = document.getElementById('evalOrderId').value;
+      const res = await apiCall(`/workorder/${id}/evaluate`, 'POST', { rating: currentRating });
+      if (res !== null) { 
+        showToast('评价成功！Redis排行榜已实时更新！'); 
+        closeEvalModal(); 
+        loadOrders(); 
+        loadLeaderboard();
+      }
+    }
+
+    // Load Leaderboard
+    async function loadLeaderboard() {
+      if (!currentUser) return;
+      const res = await apiCall('/stats/worker-leaderboard?limit=5');
+      if (!res) return;
+      
+      const lb = document.getElementById('leaderboardList');
+      lb.innerHTML = '';
+      if (res.length === 0) {
+        lb.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">本月暂无数据</div>';
+        return;
+      }
+
+      res.forEach((item, index) => {
+        // ID to Name mapping since Redis only stores ID. In real app, join DB or cache names.
+        const nameMap = { '3': '李四维修工' }; 
+        const name = nameMap[item.Member] || `师傅 ID:${item.Member}`;
+        
+        lb.innerHTML += `
+          <div class="lb-item">
+            <div class="lb-rank">#${index + 1}</div>
+            <div class="lb-name">${name}</div>
+            <div class="lb-score">
+              ${item.Score} 
+              <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // Init
+    initDashboard();
+  </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+server:
+  port: 8080
+  mode: debug # debug, release, test
+
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  user: root
+  password: "84916325"
+  dbname: dorm_repair
+  max_idle_conns: 10
+  max_open_conns: 100
+  log_mode: true
+
+redis:
+  host: 127.0.0.1
+  port: 6379
+  password: ""
+  db: 0
+
+jwt:
+  secret: "your_secret_key_here"
+  expire: 86400 # seconds, 1 day
+
+log:
+  level: debug
+  filename: "logs/app.log"
+  max_size: 100 # MB
+  max_backups: 3
+  max_age: 7 # days
