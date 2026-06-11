@@ -4,9 +4,9 @@ import (
 	"strings"
 
 	"dorm-repair-system/internal/global"
+	"dorm-repair-system/pkg/e"
 	"dorm-repair-system/pkg/response"
 	"dorm-repair-system/pkg/utils"
-
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,21 +16,21 @@ func JWTAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			response.ErrorWithStatus(c, 401, response.CodeError, "Authorization header is required")
+			response.Fail(c, e.Unauthorized, "Authorization header is required")
 			c.Abort()
 			return
 		}
 
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
-			response.ErrorWithStatus(c, 401, response.CodeError, "Authorization header format must be Bearer {token}")
+			response.Fail(c, e.Unauthorized, "Authorization header format must be Bearer {token}")
 			c.Abort()
 			return
 		}
 
 		claims, err := utils.ParseToken(parts[1])
 		if err != nil {
-			response.ErrorWithStatus(c, 401, response.CodeError, "Invalid or expired token")
+			response.Fail(c, e.Unauthorized, "Invalid or expired token")
 			c.Abort()
 			return
 		}
@@ -49,7 +49,7 @@ func CasbinRBAC() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, exists := c.Get("role")
 		if !exists {
-			response.ErrorWithStatus(c, 401, response.CodeError, "Unauthorized")
+			response.Fail(c, e.Unauthorized, "Unauthorized")
 			c.Abort()
 			return
 		}
@@ -61,13 +61,13 @@ func CasbinRBAC() gin.HandlerFunc {
 		ok, err := global.Enforcer.Enforce(sub, obj, act)
 		if err != nil {
 			global.Logger.Error("Casbin enforce error: " + err.Error())
-			response.ErrorWithStatus(c, 500, response.CodeError, "Internal server error")
+			response.Fail(c, e.ServerPanic, "Internal server error")
 			c.Abort()
 			return
 		}
 
 		if !ok {
-			response.ErrorWithStatus(c, 403, response.CodeError, "Forbidden")
+			response.Fail(c, e.Forbidden, "Forbidden")
 			c.Abort()
 			return
 		}

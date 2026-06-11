@@ -230,6 +230,17 @@
             <textarea id="repairContent" class="form-control" placeholder="请详细描述需要维修的问题..."></textarea>
           </div>
           <div class="form-group">
+            <label>报修地点</label>
+            <select id="repairLocation" class="form-control" style="background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--glass-border); padding: 12px; border-radius: 8px;">
+              <option value="宿舍楼A栋" style="background: #1e1b4b; color: white;">宿舍楼A栋</option>
+              <option value="宿舍楼B栋" style="background: #1e1b4b; color: white;">宿舍楼B栋</option>
+              <option value="宿舍楼C栋" style="background: #1e1b4b; color: white;">宿舍楼C栋</option>
+              <option value="宿舍楼D栋" style="background: #1e1b4b; color: white;">宿舍楼D栋</option>
+              <option value="图书馆" style="background: #1e1b4b; color: white;">图书馆</option>
+              <option value="第一教学楼" style="background: #1e1b4b; color: white;">第一教学楼</option>
+            </select>
+          </div>
+          <div class="form-group">
             <label>联系电话</label>
             <input type="text" id="repairPhone" class="form-control" placeholder="11位手机号码">
           </div>
@@ -245,7 +256,7 @@
         <!-- Worker Info -->
         <div id="workerPanel" class="hidden">
           <p style="color: #9ca3af; margin-bottom: 15px;">您是维修师傅，可以在右侧接单并处理您的专属工单。</p>
-          <button class="btn outline" style="width: 100%;" onclick="loadOrders()">🔄 刷新我的工单</button>
+          <button class="btn outline" style="width: 100%;" onclick="loadOrders()">🔄 刷新全部工单</button>
         </div>
       </div>
 
@@ -255,6 +266,18 @@
           <div style="color: var(--text-muted); text-align: center; padding: 20px;">数据加载中...</div>
         </div>
       </div>
+
+      <!-- Stats Panel for Admin/Housemaster -->
+      <div class="glass hidden" id="statsPanel" style="margin-top: 30px;">
+        <h2>📊 数据分析看板</h2>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+          <button class="btn small" id="btnLocationStats" onclick="toggleStatsTab('location')">楼宇报修统计</button>
+          <button class="btn small outline" id="btnEfficiencyStats" onclick="toggleStatsTab('efficiency')">师傅时效分析</button>
+        </div>
+        <div id="statsContentArea" style="max-height: 250px; overflow-y: auto;">
+          <div style="color: var(--text-muted); text-align: center; padding: 10px;">暂无数据</div>
+        </div>
+      </div>
     </div>
 
     <!-- Right Column: Data Display -->
@@ -262,6 +285,10 @@
       <div class="glass" style="height: 100%;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px;">
           <h2 style="border: none; margin: 0; padding: 0;">实时工单大厅</h2>
+          <div id="workerOrderTabs" class="hidden" style="display: flex; gap: 10px;">
+            <button class="btn small" id="btnMyOrders" onclick="switchWorkerTab('mine')">我的工单</button>
+            <button class="btn small outline" id="btnGrabOrders" onclick="switchWorkerTab('grab')">可抢工单</button>
+          </div>
           <span class="badge" style="background: rgba(255,255,255,0.1);" id="orderCount">总计: 0</span>
         </div>
         
@@ -273,8 +300,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Login Modal Removed -->
 
   <!-- Evaluate Modal -->
   <div class="modal-overlay" id="evalModal">
@@ -299,6 +324,35 @@
     </div>
   </div>
 
+  <!-- Complete Order with Consumables Modal -->
+  <div class="modal-overlay" id="completeModal">
+    <div class="glass modal-content" style="width: 450px;">
+      <h2>维保完工与物料领用登记</h2>
+      <p style="color: var(--text-muted); margin-bottom: 15px;">请登记维保过程中消耗的物料，系统将自动进行库存扣减与级联事务处理。</p>
+      
+      <div id="consumablesListArea" style="margin: 20px 0;">
+        <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 15px;">
+          <label style="flex: 2; margin-bottom: 0; text-align: left; font-size: 14px;">💡 LED日光灯管 (单位: 根)</label>
+          <input type="number" id="cons_1" class="form-control" style="width: 120px; padding: 8px 12px; margin-bottom: 0;" value="0" min="0">
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 15px;">
+          <label style="flex: 2; margin-bottom: 0; text-align: left; font-size: 14px;">🚰 水龙头合金阀芯 (单位: 个)</label>
+          <input type="number" id="cons_2" class="form-control" style="width: 120px; padding: 8px 12px; margin-bottom: 0;" value="0" min="0">
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 15px;">
+          <label style="flex: 2; margin-bottom: 0; text-align: left; font-size: 14px;">🔌 五孔电插座面板 (单位: 个)</label>
+          <input type="number" id="cons_3" class="form-control" style="width: 120px; padding: 8px 12px; margin-bottom: 0;" value="0" min="0">
+        </div>
+      </div>
+      
+      <input type="hidden" id="completeOrderId">
+      <div style="display: flex; gap: 10px;">
+        <button class="btn success" style="flex: 1;" onclick="submitComplete()">确认完工</button>
+        <button class="btn outline" onclick="closeCompleteModal()">取消</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div id="toast">操作成功</div>
 
@@ -307,6 +361,8 @@
     let currentToken = localStorage.getItem('dorm_token') || '';
     let currentUser = JSON.parse(localStorage.getItem('dorm_user') || 'null');
     let currentRating = 0;
+    let currentWorkerTab = 'mine';
+    let currentStatsTab = 'location';
 
     // Toast Notification
     function showToast(msg, isError = false) {
@@ -328,6 +384,17 @@
       document.getElementById('evalModal').classList.add('active'); 
     }
     function closeEvalModal() { document.getElementById('evalModal').classList.remove('active'); }
+
+    function openCompleteModal(id) {
+      document.getElementById('completeOrderId').value = id;
+      document.getElementById('cons_1').value = 0;
+      document.getElementById('cons_2').value = 0;
+      document.getElementById('cons_3').value = 0;
+      document.getElementById('completeModal').classList.add('active');
+    }
+    function closeCompleteModal() {
+      document.getElementById('completeModal').classList.remove('active');
+    }
 
     // API Helper
     async function apiCall(endpoint, method = 'GET', body = null) {
@@ -359,27 +426,38 @@
     // UI Updates
     function initDashboard() {
       const infoArea = document.getElementById('welcomeText');
-      const loginBtn = document.getElementById('loginBtn');
       const logoutBtn = document.getElementById('logoutBtn');
       const loginPrompt = document.getElementById('loginPrompt');
       const sForm = document.getElementById('studentForm');
       const aPanel = document.getElementById('adminPanel');
       const wPanel = document.getElementById('workerPanel');
+      const statsPanel = document.getElementById('statsPanel');
+      const workerTabs = document.getElementById('workerOrderTabs');
 
       // Reset panels
       loginPrompt.classList.remove('hidden');
       sForm.classList.add('hidden');
       aPanel.classList.add('hidden');
       wPanel.classList.add('hidden');
+      statsPanel.classList.add('hidden');
+      workerTabs.classList.add('hidden');
 
       if (currentUser) {
         infoArea.textContent = `[${currentUser.role}] ${currentUser.real_name || currentUser.username}`;
         logoutBtn.classList.remove('hidden');
         loginPrompt.classList.add('hidden');
 
-        if (currentUser.role === 'Student') sForm.classList.remove('hidden');
-        else if (currentUser.role === 'Admin') aPanel.classList.remove('hidden');
-        else if (currentUser.role === 'Worker') wPanel.classList.remove('hidden');
+        if (currentUser.role === 'Student') {
+          sForm.classList.remove('hidden');
+        } else if (currentUser.role === 'Admin' || currentUser.role === 'Housemaster') {
+          aPanel.classList.remove('hidden');
+          statsPanel.classList.remove('hidden');
+          toggleStatsTab('location');
+        } else if (currentUser.role === 'Worker') {
+          wPanel.classList.remove('hidden');
+          workerTabs.classList.remove('hidden');
+          switchWorkerTab('mine');
+        }
 
         loadOrders();
         loadLeaderboard();
@@ -391,9 +469,10 @@
     // Submit Repair
     async function submitRepair() {
       const content = document.getElementById('repairContent').value;
+      const location = document.getElementById('repairLocation').value;
       const phone = document.getElementById('repairPhone').value;
       
-      const res = await apiCall('/workorder', 'POST', { content, contact_phone: phone, image_url: '' });
+      const res = await apiCall('/workorders', 'POST', { content, contact_phone: phone, image_url: '', location });
       if (res !== null) { // success is null data but code 0
         showToast('🎉 报修提交成功！');
         document.getElementById('repairContent').value = '';
@@ -404,7 +483,11 @@
 
     // Load Orders
     async function loadOrders() {
-      const res = await apiCall('/workorder?page_size=20');
+      let endpoint = '/workorders?page_size=20';
+      if (currentUser && currentUser.role === 'Worker' && currentWorkerTab === 'grab') {
+        endpoint = '/workorders?status=待指派&page_size=20';
+      }
+      const res = await apiCall(endpoint);
       if (!res) return;
       
       document.getElementById('orderCount').textContent = `总计: ${res.total}`;
@@ -420,15 +503,17 @@
         let actionHtml = '';
         
         // Dynamic actions based on role and status
-        if (currentUser.role === 'Admin' && order.status === '待指派') {
-          // Hardcoded worker id 3 for demo, in real world we need a worker selector
-          actionHtml = `<button class="btn small success" onclick="assignWorker(${order.id}, 3)">指派给李四(ID:3)</button>`;
+        if ((currentUser.role === 'Admin' || currentUser.role === 'Housemaster') && order.status === '待指派') {
+          actionHtml = `<button class="btn small success" onclick="assignWorker(${order.id}, 4)">指派给李四(ID:4)</button>`;
         } 
-        else if (currentUser.role === 'Worker' && order.status === '已指派') {
+        else if (currentUser.role === 'Worker' && order.status === '待指派') {
+          actionHtml = `<button class="btn small" style="background: var(--warning);" onclick="grabOrder(${order.id})">自主抢单</button>`;
+        }
+        else if (currentUser.role === 'Worker' && order.status === '已指派' && order.worker_id == currentUser.id) {
           actionHtml = `<button class="btn small" onclick="updateStatus(${order.id}, '维修中')">开始处理</button>`;
         }
-        else if (currentUser.role === 'Worker' && order.status === '维修中') {
-          actionHtml = `<button class="btn small success" onclick="updateStatus(${order.id}, '已完工')">完成维保</button>`;
+        else if (currentUser.role === 'Worker' && order.status === '维修中' && order.worker_id == currentUser.id) {
+          actionHtml = `<button class="btn small success" onclick="openCompleteModal(${order.id})">完成维保</button>`;
         }
         else if (currentUser.role === 'Student' && order.status === '已完工') {
           actionHtml = `<button class="btn small" style="background:#ec4899;" onclick="openEvalModal(${order.id})">⭐ 立即评价</button>`;
@@ -447,7 +532,8 @@
               <span class="badge ${order.status}">${order.status}</span>
             </div>
             <div class="order-content">${order.content}</div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">联系电话: ${order.contact_phone}</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">📍 报修地点: ${order.location || '宿舍楼A栋'}</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">📞 联系电话: ${order.contact_phone}</div>
             <div class="order-footer">
               <span style="font-size: 12px; color: rgba(255,255,255,0.4);">${dateStr}</span>
               <div class="actions">${actionHtml}</div>
@@ -459,14 +545,111 @@
 
     // Admin Assign
     async function assignWorker(orderId, workerId) {
-      const res = await apiCall(`/workorder/${orderId}/assign`, 'PUT', { worker_id: workerId });
+      const res = await apiCall(`/workorders/${orderId}/assignment`, 'PUT', { worker_id: workerId });
       if (res !== null) { showToast('工单指派成功！'); loadOrders(); }
     }
 
     // Worker Update Status
     async function updateStatus(orderId, status) {
-      const res = await apiCall(`/workorder/${orderId}/status`, 'PUT', { status });
+      const res = await apiCall(`/workorders/${orderId}/status`, 'PUT', { status });
       if (res !== null) { showToast('状态更新成功！'); loadOrders(); }
+    }
+
+    // Worker Grab Order
+    async function grabOrder(orderId) {
+      const res = await apiCall(`/workorders/${orderId}/grab`, 'PUT');
+      if (res !== null) { showToast('🎉 抢单成功！已分配给您。'); loadOrders(); }
+    }
+
+    // Worker Complete Order with Consumables
+    async function submitComplete() {
+      const id = document.getElementById('completeOrderId').value;
+      const items = [];
+      const c1 = parseInt(document.getElementById('cons_1').value) || 0;
+      const c2 = parseInt(document.getElementById('cons_2').value) || 0;
+      const c3 = parseInt(document.getElementById('cons_3').value) || 0;
+      
+      if (c1 > 0) items.push({ consumable_id: 1, quantity: c1 });
+      if (c2 > 0) items.push({ consumable_id: 2, quantity: c2 });
+      if (c3 > 0) items.push({ consumable_id: 3, quantity: c3 });
+      
+      const res = await apiCall(`/workorders/${id}/completion`, 'POST', items);
+      if (res !== null) {
+        showToast('🎉 完工登记成功，耗材库存已扣减！');
+        closeCompleteModal();
+        loadOrders();
+      }
+    }
+
+    // Switch Worker Tab
+    function switchWorkerTab(tab) {
+      currentWorkerTab = tab;
+      const myBtn = document.getElementById('btnMyOrders');
+      const grabBtn = document.getElementById('btnGrabOrders');
+      if (tab === 'mine') {
+        myBtn.classList.remove('outline');
+        grabBtn.classList.add('outline');
+      } else {
+        myBtn.classList.add('outline');
+        grabBtn.classList.remove('outline');
+      }
+      loadOrders();
+    }
+
+    // Toggle Stats Tab
+    function toggleStatsTab(tab) {
+      currentStatsTab = tab;
+      const locBtn = document.getElementById('btnLocationStats');
+      const effBtn = document.getElementById('btnEfficiencyStats');
+      if (tab === 'location') {
+        locBtn.classList.remove('outline');
+        effBtn.classList.add('outline');
+        loadLocationStats();
+      } else {
+        locBtn.classList.add('outline');
+        effBtn.classList.remove('outline');
+        loadEfficiencyStats();
+      }
+    }
+
+    async function loadLocationStats() {
+      const res = await apiCall('/stats/locations');
+      const area = document.getElementById('statsContentArea');
+      if (!res) {
+        area.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 10px;">加载失败</div>';
+        return;
+      }
+      if (res.length === 0) {
+        area.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 10px;">暂无数据</div>';
+        return;
+      }
+      let html = '<table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px; color: white;">';
+      html += '<tr style="border-bottom:1px solid var(--glass-border); color:var(--text-muted);"><th style="padding:8px 0;">地点</th><th style="padding:8px 0; text-align:right;">工单数</th></tr>';
+      res.forEach(item => {
+        html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);"><td style="padding:8px 0;">📍 ${item.location}</td><td style="padding:8px 0; text-align:right; font-weight:bold; color:var(--primary);">${item.total_count}</td></tr>`;
+      });
+      html += '</table>';
+      area.innerHTML = html;
+    }
+
+    async function loadEfficiencyStats() {
+      const res = await apiCall('/stats/efficiency');
+      const area = document.getElementById('statsContentArea');
+      if (!res) {
+        area.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 10px;">加载失败</div>';
+        return;
+      }
+      if (res.length === 0) {
+        area.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 10px;">暂无完工数据</div>';
+        return;
+      }
+      let html = '<table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px; color: white;">';
+      html += '<tr style="border-bottom:1px solid var(--glass-border); color:var(--text-muted);"><th style="padding:8px 0;">维修工</th><th style="padding:8px 0; text-align:right;">平均时效 (分钟)</th></tr>';
+      res.forEach(item => {
+        html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);"><td style="padding:8px 0;">🔧 ${item.real_name}</td><td style="padding:8px 0; text-align:right; font-weight:bold; color:var(--success);">${item.avg_minutes.toFixed(1)}</td></tr>`;
+      });
+      html += '</table>';
+      area.innerHTML = html;
     }
 
     // Star Rating Logic
@@ -486,7 +669,7 @@
     // Student Evaluate
     async function submitEval() {
       const id = document.getElementById('evalOrderId').value;
-      const res = await apiCall(`/workorder/${id}/evaluate`, 'POST', { rating: currentRating });
+      const res = await apiCall(`/workorders/${id}/evaluations`, 'POST', { rating: currentRating });
       if (res !== null) { 
         showToast('评价成功！Redis排行榜已实时更新！'); 
         closeEvalModal(); 
@@ -510,7 +693,7 @@
 
       res.forEach((item, index) => {
         // ID to Name mapping since Redis only stores ID. In real app, join DB or cache names.
-        const nameMap = { '3': '李四维修工' }; 
+        const nameMap = { '4': '李四维修工' }; 
         const name = nameMap[item.Member] || `师傅 ID:${item.Member}`;
         
         lb.innerHTML += `

@@ -10,9 +10,10 @@ import (
 type RoleEnum string
 
 const (
-	RoleAdmin   RoleEnum = "Admin"
-	RoleStudent RoleEnum = "Student"
-	RoleWorker  RoleEnum = "Worker"
+	RoleAdmin       RoleEnum = "Admin"
+	RoleStudent     RoleEnum = "Student"
+	RoleWorker      RoleEnum = "Worker"
+	RoleHousemaster RoleEnum = "Housemaster"
 )
 
 // WorkOrderStatusEnum defines work order status
@@ -52,8 +53,9 @@ type WorkOrder struct {
 	Content      string              `gorm:"type:text;not null" json:"content"`
 	ContactPhone string              `gorm:"type:varchar(20);not null" json:"contact_phone"`
 	ImageURL     string              `gorm:"type:varchar(255)" json:"image_url"`
-	Status    WorkOrderStatusEnum `gorm:"type:varchar(20);not null;default:'待指派'" json:"status"`
-	Rating    int                 `gorm:"type:int;default:0" json:"rating"` // 0 means not rated, 1-5 for rating
+	Status       WorkOrderStatusEnum `gorm:"type:varchar(20);not null;default:'待指派'" json:"status"`
+	Rating       int                 `gorm:"type:int;default:0" json:"rating"` // 0 means not rated, 1-5 for rating
+	Location     string              `gorm:"type:varchar(100);not null;default:'宿舍楼A栋'" json:"location"`
 }
 
 // Notice model
@@ -79,4 +81,26 @@ type InspectionOrder struct {
 	Item        string         `gorm:"type:varchar(100);not null" json:"item"`
 	Result      string         `gorm:"type:varchar(20);not null" json:"result"`
 	Comments    string         `gorm:"type:text" json:"comments"`
+}
+
+// Consumable represents a warehouse maintenance material/consumable
+type Consumable struct {
+	ID        uint           `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	Name      string         `gorm:"type:varchar(100);not null;uniqueIndex" json:"name"`
+	Stock     int            `gorm:"type:int;not null;default:0" json:"stock"`
+	Unit      string         `gorm:"type:varchar(20);not null;default:'个'" json:"unit"`
+}
+
+// WorkOrderConsumable records the consumption of consumables per workorder
+type WorkOrderConsumable struct {
+	ID           uint       `gorm:"primarykey" json:"id"`
+	CreatedAt    time.Time  `json:"created_at"`
+	WorkOrderID  uint       `gorm:"not null;index" json:"work_order_id"`
+	WorkOrder    WorkOrder  `gorm:"foreignKey:WorkOrderID" json:"-"`
+	ConsumableID uint       `gorm:"not null;index" json:"consumable_id"`
+	Consumable   Consumable `gorm:"foreignKey:ConsumableID" json:"consumable"`
+	Quantity     int        `gorm:"type:int;not null;default:1" json:"quantity"`
 }

@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// GinLogger logs HTTP requests using Zap
+// GinLogger logs HTTP requests using Zap with trace IDs and log level classification
 func GinLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
@@ -19,9 +19,12 @@ func GinLogger() gin.HandlerFunc {
 		c.Next()
 
 		cost := time.Since(start)
-		
-		global.Logger.Info(path,
-			zap.Int("status", c.Writer.Status()),
+		traceID := GetTraceID(c.Request.Context())
+		status := c.Writer.Status()
+
+		fields := []zap.Field{
+			zap.String("trace_id", traceID),
+			zap.Int("status", status),
 			zap.String("method", c.Request.Method),
 			zap.String("path", path),
 			zap.String("query", query),
@@ -29,6 +32,14 @@ func GinLogger() gin.HandlerFunc {
 			zap.String("user-agent", c.Request.UserAgent()),
 			zap.String("errors", c.Errors.ByType(gin.ErrorTypePrivate).String()),
 			zap.Duration("cost", cost),
-		)
+		}
+
+		if status >= 500 {
+			global.Logger.Error("Request Error", fields...)
+		} else if status >= 400 {
+			global.Logger.Warn("Request Warning", fields...)
+		} else {
+			global.Logger.Info("Request Success", fields...)
+		}
 	}
 }

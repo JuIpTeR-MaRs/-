@@ -30,11 +30,16 @@ func main() {
 	global.InitDB()
 	
 	// Auto migrate tables
-	err := global.DB.AutoMigrate(&model.User{}, &model.WorkOrder{}, &model.Notice{}, &model.InspectionOrder{})
+	err := global.DB.AutoMigrate(&model.User{}, &model.WorkOrder{}, &model.Notice{}, &model.InspectionOrder{}, &model.Consumable{}, &model.WorkOrderConsumable{})
 	if err != nil {
 		global.Logger.Fatal("Failed to auto migrate tables", zap.Error(err))
 	}
 	global.Logger.Info("Database tables migrated successfully")
+
+	// Seed consumables
+	global.SeedDefaultConsumables()
+	// Seed users
+	global.SeedDefaultUsers()
 
 	// 4. Initialize Redis
 	global.InitRedis()

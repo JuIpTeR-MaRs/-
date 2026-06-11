@@ -2,30 +2,35 @@ package controller
 
 import (
 	"dorm-repair-system/internal/service"
+	"dorm-repair-system/pkg/e"
 	"dorm-repair-system/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
 
 type UserController struct {
-	userService *service.UserService
+	userService service.IUserService
 }
 
-func NewUserController() *UserController {
+func NewUserController(s service.IUserService) *UserController {
 	return &UserController{
-		userService: service.NewUserService(),
+		userService: s,
 	}
 }
 
 func (ctrl *UserController) Register(c *gin.Context) {
 	var input service.RegisterInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		response.Error(c, response.CodeError, err.Error())
+		response.Fail(c, e.InvalidParams, response.TranslateError(err))
 		return
 	}
 
-	if err := ctrl.userService.Register(&input); err != nil {
-		response.Error(c, response.CodeError, err.Error())
+	if err := ctrl.userService.Register(c.Request.Context(), &input); err != nil {
+		if err.Error() == "username already exists" {
+			response.Fail(c, e.UserAlreadyExists)
+		} else {
+			response.Fail(c, e.ServerPanic, err.Error())
+		}
 		return
 	}
 
@@ -35,13 +40,17 @@ func (ctrl *UserController) Register(c *gin.Context) {
 func (ctrl *UserController) Login(c *gin.Context) {
 	var input service.LoginInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		response.Error(c, response.CodeError, err.Error())
+		response.Fail(c, e.InvalidParams, response.TranslateError(err))
 		return
 	}
 
-	output, err := ctrl.userService.Login(&input)
+	output, err := ctrl.userService.Login(c.Request.Context(), &input)
 	if err != nil {
-		response.Error(c, response.CodeError, err.Error())
+		if err.Error() == "invalid username or password" {
+			response.Fail(c, e.InvalidPassword)
+		} else {
+			response.Fail(c, e.ServerPanic, err.Error())
+		}
 		return
 	}
 
@@ -51,13 +60,13 @@ func (ctrl *UserController) Login(c *gin.Context) {
 func (ctrl *UserController) GetUserInfo(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		response.Error(c, response.CodeError, "unauthorized")
+		response.Fail(c, e.Unauthorized)
 		return
 	}
 
-	user, err := ctrl.userService.GetUserInfo(userID.(uint))
+	user, err := ctrl.userService.GetUserInfo(c.Request.Context(), userID.(uint))
 	if err != nil {
-		response.Error(c, response.CodeError, "failed to get user info")
+		response.Fail(c, e.NotFound, "failed to get user info")
 		return
 	}
 

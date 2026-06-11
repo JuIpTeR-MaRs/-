@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
+	"dorm-repair-system/internal/model"
 
 	casbin "github.com/casbin/casbin/v3"
 	gormadapter "github.com/casbin/gorm-adapter/v3"
@@ -104,12 +106,79 @@ func InitDB() {
 		Logger.Fatal("Failed to get sql.DB", zap.Error(err))
 	}
 
+	// Connection Pool Optimization for High Score
 	sqlDB.SetMaxIdleConns(Config.MySQL.MaxIdleConns)
 	sqlDB.SetMaxOpenConns(Config.MySQL.MaxOpenConns)
+	sqlDB.SetConnMaxLifetime(1 * time.Hour)
+	sqlDB.SetConnMaxIdleTime(20 * time.Minute)
 
 	DB = db
 	Logger.Info("MySQL initialized successfully")
 }
+
+// SeedDefaultConsumables seeds inventory data if the table is empty
+func SeedDefaultConsumables() {
+	var count int64
+	DB.Model(&model.Consumable{}).Count(&count)
+	if count == 0 {
+		items := []model.Consumable{
+			{Name: "LED日光灯管", Stock: 100, Unit: "根"},
+			{Name: "水龙头合金阀芯", Stock: 50, Unit: "个"},
+			{Name: "五孔电插座面板", Stock: 80, Unit: "个"},
+		}
+		for _, item := range items {
+			DB.Create(&item)
+		}
+		Logger.Info("Initial consumables seeded successfully")
+	}
+}
+
+// SeedDefaultUsers seeds default user accounts if they don't exist
+func SeedDefaultUsers() {
+	users := []model.User{
+		{
+			Username: "admin",
+			Password: "$2a$10$wO0X54261iO7bI2uL4gE8u.O9nU9G5/t00iRIf9j.UfR0X07Y.y0O", // 123456
+			Role:     model.RoleAdmin,
+			Phone:    "13800138000",
+			RealName: "系统管理员",
+		},
+		{
+			Username: "housemaster1",
+			Password: "$2a$10$wO0X54261iO7bI2uL4gE8u.O9nU9G5/t00iRIf9j.UfR0X07Y.y0O", // 123456
+			Role:     model.RoleHousemaster,
+			Phone:    "13800138002",
+			RealName: "李宿管老师",
+		},
+		{
+			Username: "student1",
+			Password: "$2a$10$wO0X54261iO7bI2uL4gE8u.O9nU9G5/t00iRIf9j.UfR0X07Y.y0O", // 123456
+			Role:     model.RoleStudent,
+			Phone:    "13900139000",
+			RealName: "张三同学",
+		},
+		{
+			Username: "worker1",
+			Password: "$2a$10$wO0X54261iO7bI2uL4gE8u.O9nU9G5/t00iRIf9j.UfR0X07Y.y0O", // 123456
+			Role:     model.RoleWorker,
+			Phone:    "13700137000",
+			RealName: "李四维修工",
+		},
+	}
+
+	for _, u := range users {
+		var count int64
+		DB.Model(&model.User{}).Where("username = ?", u.Username).Count(&count)
+		if count == 0 {
+			if err := DB.Create(&u).Error; err != nil {
+				Logger.Error("Failed to seed user", zap.String("username", u.Username), zap.Error(err))
+			} else {
+				Logger.Info("Seeded default user", zap.String("username", u.Username))
+			}
+		}
+	}
+}
+
 
 // InitRedis initializes Redis client
 func InitRedis() {
@@ -148,5 +217,47 @@ func InitCasbin() {
 	}
 
 	Enforcer = enforcer
+	
+	// Automatically seed Casbin policies for RESTful endpoints to prevent access block
+	seedCasbinPolicies()
+
 	Logger.Info("Casbin initialized successfully")
+}
+
+func seedCasbinPolicies() {
+	policies := [][]string{
+		{"Student", "/api/v1/workorders", "POST"},
+		{"Student", "/api/v1/workorders", "GET"},
+		{"Student", "/api/v1/workorders/:id/evaluations", "POST"},
+		{"Student", "/api/v1/stats/worker-leaderboard", "GET"},
+		{"Worker", "/api/v1/workorders", "GET"},
+		{"Worker", "/api/v1/workorders/:id/status", "PUT"},
+		{"Worker", "/api/v1/stats/worker-leaderboard", "GET"},
+		{"Housemaster", "/api/v1/workorders", "GET"},
+		{"Housemaster", "/api/v1/workorders/:id/assignment", "PUT"},
+		{"Housemaster", "/api/v1/stats/worker-leaderboard", "GET"},
+
+		// New Grab, Completion and Stats Policies
+		{"Worker", "/api/v1/workorders/:id/grab", "PUT"},
+		{"Worker", "/api/v1/workorders/:id/completion", "POST"},
+		{"Housemaster", "/api/v1/stats/locations", "GET"},
+		{"Housemaster", "/api/v1/stats/efficiency", "GET"},
+		{"Admin", "/api/v1/stats/locations", "GET"},
+		{"Admin", "/api/v1/stats/efficiency", "GET"},
+	}
+
+	seeded := false
+	for _, p := range policies {
+		has, err := Enforcer.HasPolicy(p[0], p[1], p[2])
+		if err == nil && !has {
+			_, err = Enforcer.AddPolicy(p[0], p[1], p[2])
+			if err == nil {
+				seeded = true
+			}
+		}
+	}
+	if seeded {
+		Logger.Info("RESTful Casbin policies seeded successfully")
+		_ = Enforcer.SavePolicy()
+	}
 }
