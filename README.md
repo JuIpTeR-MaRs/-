@@ -257,7 +257,7 @@ go test -cover ./internal/service
     --- PASS: TestCasbinRBAC/Admin_-_Bypasses_All_Rules_(Superuser_Allowed) (0.00s)
     --- PASS: TestCasbinRBAC/Admin_-_Bypasses_Non-Existent_Path_(Superuser_Allowed) (0.00s)
 PASS
-ok  	dorm-repair-system/internal/middleware	0.274s
+ok  	dorm-repair-system/internal/middleware	0.196s
 === RUN   TestGrabWorkOrderSuccess
 --- PASS: TestGrabWorkOrderSuccess (0.02s)
 === RUN   TestGrabWorkOrderConcurrency
