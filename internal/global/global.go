@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	Config   *config.Config
-	DB       *gorm.DB
-	Redis    *redis.Client
-	Logger   *zap.Logger
-	Enforcer *casbin.Enforcer
+	Config   *config.Config    // 全局配置
+	DB       *gorm.DB          // 数据库连接实例
+	Redis    *redis.Client     // Redis 客户端实例
+	Logger   *zap.Logger       // 日志记录器
+	Enforcer *casbin.Enforcer  // Casbin 权限执行器
 )

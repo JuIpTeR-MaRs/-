@@ -28,7 +28,7 @@
       overflow: hidden;
     }
 
-    /* Abstract background animations */
+    /* 背景抽象动画 */
     .bg-shape {
       position: absolute;
       border-radius: 50%;
@@ -164,7 +164,7 @@
       color: white;
     }
 
-    /* Toast */
+    /* 消息提示框 */
     #toast {
       position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-50px);
       background: #ef4444; color: white;
@@ -201,7 +201,7 @@
       <p id="formSubTitle">期末考核大作业演示系统</p>
     </div>
 
-    <!-- Login Section -->
+    <!-- 登录模块 -->
     <div id="loginSection">
       <div class="form-group">
         <label>学号 / 工号 (用户名)</label>
@@ -223,7 +223,7 @@
       </div>
     </div>
 
-    <!-- Register Section -->
+    <!-- 注册模块 -->
     <div id="registerSection" class="hidden">
       <div class="form-group">
         <label>学号 / 工号 (用户名)</label>
@@ -268,7 +268,7 @@
   <div id="toast">登录失败，请检查账号密码</div>
 
   <script>
-    // Redirect if already logged in
+    // 若已登录则重定向至主页
     if (localStorage.getItem('dorm_token')) {
       window.location.href = '/';
     }
@@ -393,7 +393,7 @@
       }
     }
 
-    // Support Enter key for the active form
+    // 监听回车键以提交表单
     document.addEventListener('keypress', function (e) {
       if (e.key === 'Enter') {
         const isRegActive = !document.getElementById('registerSection').classList.contains('hidden');

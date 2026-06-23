@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// CustomRecovery intercepts panics, logs stack trace with Zap, and returns a unified JSON error response.
+// CustomRecovery 捕获异常恢复中间件，记录 panic 堆栈并统一返回 500 错误
 func CustomRecovery() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {

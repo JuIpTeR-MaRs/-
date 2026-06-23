@@ -20,7 +20,7 @@ func NewWorkOrderController(s service.IWorkOrderService) *WorkOrderController {
 	}
 }
 
-// SubmitWorkOrderRequest defines the validation rules for creating an order
+// SubmitWorkOrderRequest 定义提交工单的请求参数及校验规则
 type SubmitWorkOrderRequest struct {
 	Content      string `json:"content" binding:"required,min=10,max=200"`
 	ContactPhone string `json:"contact_phone" binding:"required,len=11,numeric"`
@@ -207,7 +207,7 @@ func (ctrl *WorkOrderController) GetWorkerLeaderboard(c *gin.Context) {
 	response.Success(c, leaderboard)
 }
 
-// GrabOrder handles autonomous worker grabbing of an order using Redis lock
+// GrabOrder 维修工自主抢单（使用 Redis 锁控制并发）
 // 维修工自助抢单
 func (ctrl *WorkOrderController) GrabOrder(c *gin.Context) {
 	orderID, err := strconv.ParseUint(c.Param("id"), 10, 32)
@@ -226,7 +226,7 @@ func (ctrl *WorkOrderController) GrabOrder(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// CompleteOrderWithConsumables handles completing an order with inventory depletion
+// CompleteOrderWithConsumables 维修工提交完成工单并扣减耗材库存
 // 完工并登记耗材
 func (ctrl *WorkOrderController) CompleteOrderWithConsumables(c *gin.Context) {
 	orderID, err := strconv.ParseUint(c.Param("id"), 10, 32)
@@ -252,7 +252,7 @@ func (ctrl *WorkOrderController) CompleteOrderWithConsumables(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// GetLocationStats handles building report statistics for location frequency
+// GetLocationStats 统计报修地点频率分布数据
 func (ctrl *WorkOrderController) GetLocationStats(c *gin.Context) {
 	stats, err := ctrl.workOrderService.GetLocationStats(c.Request.Context())
 	if err != nil {
@@ -263,7 +263,7 @@ func (ctrl *WorkOrderController) GetLocationStats(c *gin.Context) {
 	response.Success(c, stats)
 }
 
-// GetWorkerEfficiency handles building statistics for worker completion efficiency
+// GetWorkerEfficiency 统计维修师傅的工单处理时效/效率数据
 func (ctrl *WorkOrderController) GetWorkerEfficiency(c *gin.Context) {
 	stats, err := ctrl.workOrderService.GetWorkerEfficiency(c.Request.Context())
 	if err != nil {
@@ -274,7 +274,7 @@ func (ctrl *WorkOrderController) GetWorkerEfficiency(c *gin.Context) {
 	response.Success(c, stats)
 }
 
-// TestPanic endpoint to demonstrate global recovery middleware
+// TestPanic 测试用 Panic 触发接口，用于验证全局异常恢复中间件功能
 func (ctrl *WorkOrderController) TestPanic(c *gin.Context) {
 	panic("This is an intentional panic to test recovery middleware!")
 }

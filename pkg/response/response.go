@@ -7,12 +7,14 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// Response 定义标准的 JSON 响应结构
 type Response struct {
 	Code e.ErrCode   `json:"code"`
 	Msg  string      `json:"msg"`
 	Data interface{} `json:"data,omitempty"`
 }
 
+// Success 返回成功响应
 func Success(c *gin.Context, data interface{}) {
 	c.JSON(e.Success.HttpStatus(), Response{
 		Code: e.Success,
@@ -21,6 +23,7 @@ func Success(c *gin.Context, data interface{}) {
 	})
 }
 
+// Fail 返回失败响应
 func Fail(c *gin.Context, code e.ErrCode, customMsg ...string) {
 	msg := code.Msg()
 	if len(customMsg) > 0 && customMsg[0] != "" {
@@ -33,7 +36,7 @@ func Fail(c *gin.Context, code e.ErrCode, customMsg ...string) {
 	})
 }
 
-// TranslateError converts validator validation errors to user-friendly messages
+// TranslateError 将验证器错误翻译成中文提示
 func TranslateError(err error) string {
 	errs, ok := err.(validator.ValidationErrors)
 	if !ok {

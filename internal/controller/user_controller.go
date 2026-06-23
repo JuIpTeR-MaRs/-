@@ -8,16 +8,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// UserController 用户控制器，处理用户相关的 HTTP 请求
 type UserController struct {
 	userService service.IUserService
 }
 
+// NewUserController 创建用户控制器实例
 func NewUserController(s service.IUserService) *UserController {
 	return &UserController{
 		userService: s,
 	}
 }
 
+// Register 处理用户注册请求
 func (ctrl *UserController) Register(c *gin.Context) {
 	var input service.RegisterInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -37,6 +40,7 @@ func (ctrl *UserController) Register(c *gin.Context) {
 	response.Success(c, nil)
 }
 
+// Login 处理用户登录请求
 func (ctrl *UserController) Login(c *gin.Context) {
 	var input service.LoginInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -57,6 +61,7 @@ func (ctrl *UserController) Login(c *gin.Context) {
 	response.Success(c, output)
 }
 
+// GetUserInfo 获取当前登录用户信息
 func (ctrl *UserController) GetUserInfo(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -73,6 +78,7 @@ func (ctrl *UserController) GetUserInfo(c *gin.Context) {
 	response.Success(c, user)
 }
 
+// GetWorkers 获取所有维修工（师傅）列表
 func (ctrl *UserController) GetWorkers(c *gin.Context) {
 	workers, err := ctrl.userService.ListWorkers(c.Request.Context())
 	if err != nil {

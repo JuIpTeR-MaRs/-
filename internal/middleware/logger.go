@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// GinLogger logs HTTP requests using Zap with trace IDs and log level classification
+// GinLogger 使用 Zap 记录 HTTP 请求日志中间件
 func GinLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()

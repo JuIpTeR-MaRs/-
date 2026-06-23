@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// JWTAuth middleware checks the JWT token
+// JWTAuth 中间件：校验请求中的 JWT 令牌
 func JWTAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
@@ -35,7 +35,7 @@ func JWTAuth() gin.HandlerFunc {
 			return
 		}
 
-		// Set user info to context
+		// 将用户信息存入 context
 		c.Set("userID", claims.UserID)
 		c.Set("username", claims.Username)
 		c.Set("role", claims.Role)
@@ -44,7 +44,7 @@ func JWTAuth() gin.HandlerFunc {
 	}
 }
 
-// CasbinRBAC middleware checks permissions using Casbin
+// CasbinRBAC 中间件：使用 Casbin 进行基于角色的访问控制
 func CasbinRBAC() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, exists := c.Get("role")

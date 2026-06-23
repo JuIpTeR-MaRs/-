@@ -2,6 +2,7 @@ package e
 
 import "net/http"
 
+// ErrCode 自定义错误码类型
 type ErrCode int
 
 const (
@@ -12,7 +13,7 @@ const (
 	NotFound      ErrCode = 40401
 	ServerPanic   ErrCode = 50001
 
-	// Business Errors
+	// 业务模块错误码
 	UserAlreadyExists ErrCode = 20001
 	InvalidPassword   ErrCode = 20002
 	OrderStateError   ErrCode = 30001
@@ -32,6 +33,7 @@ var codeToMsg = map[ErrCode]string{
 	OrderAuthError:    "无权操作此工单",
 }
 
+// Msg 获取错误码对应的消息描述
 func (c ErrCode) Msg() string {
 	if msg, ok := codeToMsg[c]; ok {
 		return msg
@@ -39,6 +41,7 @@ func (c ErrCode) Msg() string {
 	return "未知错误"
 }
 
+// HttpStatus 获取错误码对应的 HTTP 状态码
 func (c ErrCode) HttpStatus() int {
 	switch c {
 	case Success:

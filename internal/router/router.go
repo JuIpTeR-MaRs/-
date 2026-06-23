@@ -12,17 +12,17 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.New()
 	
-	// Global middlewares
+	// 全局中间件
 	r.Use(middleware.Cors())
 	r.Use(middleware.TraceIDMiddleware())
 	r.Use(middleware.GinLogger())
 	r.Use(middleware.CustomRecovery())
 
-	// Serve the frontend pages
+	// 静态文件服务：托管前端页面
 	r.StaticFile("/", "./index.html")
 	r.StaticFile("/login", "./login.html")
 
-	// 1. Dependency Injection Wiring (Clean Architecture)
+	// 1. 依赖注入组装 (Clean Architecture 架构)
 	userRepo := repository.NewUserRepository()
 	workOrderRepo := repository.NewWorkOrderRepository()
 
@@ -34,17 +34,17 @@ func SetupRouter() *gin.Engine {
 
 	api := r.Group("/api/v1")
 	
-	// Public routes
+	// 开放的认证路由
 	auth := api.Group("/auth")
 	{
 		auth.POST("/register", userCtrl.Register)
 		auth.POST("/login", userCtrl.Login)
 	}
 
-	// Test Route for Panic Recovery
+	// 异常恢复测试路由
 	api.GET("/test-panic", workOrderCtrl.TestPanic)
 
-	// Protected routes
+	// 受 JWT 登录认证保护的路由
 	protected := api.Group("")
 	protected.Use(middleware.JWTAuth())
 	{
@@ -54,20 +54,20 @@ func SetupRouter() *gin.Engine {
 			user.GET("/workers", userCtrl.GetWorkers)
 		}
 
-		// RESTfulized Routes Alignment
+		// 符合 RESTful 规范的工单路由，由 Casbin 执行基于角色的访问控制 (RBAC)
 		workorders := protected.Group("/workorders")
 		workorders.Use(middleware.CasbinRBAC())
 		{
-			// Student submits workorder protected by Redis Rate Limiter middleware (10 capacity, 1 refilled token/sec)
+			// 学生创建工单：受限流中间件限制（容量 10，每秒补充 1 个令牌）
 			workorders.POST("", middleware.RateLimiterMiddleware(10, 1), workOrderCtrl.CreateOrder)
 			workorders.GET("", workOrderCtrl.ListOrders)
 			workorders.POST("/:id/evaluations", workOrderCtrl.EvaluateOrder)
 			workorders.PUT("/:id/assignment", workOrderCtrl.AssignWorker)
 			workorders.PUT("/:id/status", workOrderCtrl.UpdateStatusByWorker)
 
-			// Grab order via worker
+			// 师傅抢单接口
 			workorders.PUT("/:id/grab", workOrderCtrl.GrabOrder)
-			// Worker completes order specifying used consumables
+			// 师傅完成工单（扣减库存）
 			workorders.POST("/:id/completion", workOrderCtrl.CompleteOrderWithConsumables)
 		}
 

@@ -19,39 +19,39 @@ import (
 )
 
 func main() {
-	// 1. Initialize Config
+	// 1. 初始化全局配置
 	global.InitConfig("config/config.yaml")
 
-	// 2. Initialize Logger
+	// 2. 初始化日志记录器
 	global.InitLogger()
 	defer global.Logger.Sync()
 
-	// 3. Initialize MySQL and GORM
+	// 3. 初始化 MySQL 数据库连接
 	global.InitDB()
 	
-	// Auto migrate tables
+	// 自动同步数据库表结构
 	err := global.DB.AutoMigrate(&model.User{}, &model.WorkOrder{}, &model.Notice{}, &model.InspectionOrder{}, &model.Consumable{}, &model.WorkOrderConsumable{})
 	if err != nil {
 		global.Logger.Fatal("Failed to auto migrate tables", zap.Error(err))
 	}
 	global.Logger.Info("Database tables migrated successfully")
 
-	// Seed consumables
+	// 初始化物料库存种子数据
 	global.SeedDefaultConsumables()
-	// Seed users
+	// 初始化默认用户账户种子数据
 	global.SeedDefaultUsers()
 
-	// 4. Initialize Redis
+	// 4. 初始化 Redis 客户端
 	global.InitRedis()
 
-	// 5. Initialize Casbin
+	// 5. 初始化 Casbin 权限管理器
 	global.InitCasbin()
 
-	// 6. Setup Gin Router
+	// 6. 初始化并配置 Gin 路由器
 	gin.SetMode(global.Config.Server.Mode)
 	r := router.SetupRouter()
 
-	// 7. Start Server gracefully
+	// 7. 优雅启动与关机配置
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", global.Config.Server.Port),
 		Handler: r,
@@ -64,7 +64,7 @@ func main() {
 		}
 	}()
 
-	// Wait for interrupt signal to gracefully shutdown the server with a timeout of 5 seconds.
+	// 监听中断与终止信号以实现优雅退出，设定最长等待时间为 5 秒
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit

@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// RoleEnum defines user roles
+// RoleEnum 用户角色
 type RoleEnum string
 
 const (
@@ -16,7 +16,7 @@ const (
 	RoleHousemaster RoleEnum = "Housemaster"
 )
 
-// WorkOrderStatusEnum defines work order status
+// WorkOrderStatusEnum 工单状态
 type WorkOrderStatusEnum string
 
 const (
@@ -27,7 +27,7 @@ const (
 	StatusEvaluated         WorkOrderStatusEnum = "已评价"
 )
 
-// User model
+// User 用户实体
 type User struct {
 	ID        uint           `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time      `json:"created_at"`
@@ -40,7 +40,7 @@ type User struct {
 	RealName  string         `gorm:"type:varchar(50)" json:"real_name"`
 }
 
-// WorkOrder model
+// WorkOrder 工单实体
 type WorkOrder struct {
 	ID        uint                `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time           `gorm:"index" json:"created_at"`
@@ -54,22 +54,22 @@ type WorkOrder struct {
 	ContactPhone string              `gorm:"type:varchar(20);not null" json:"contact_phone"`
 	ImageURL     string              `gorm:"type:varchar(255)" json:"image_url"`
 	Status       WorkOrderStatusEnum `gorm:"type:varchar(20);not null;default:'待指派'" json:"status"`
-	Rating       int                 `gorm:"type:int;default:0" json:"rating"` // 0 means not rated, 1-5 for rating
+	Rating       int                 `gorm:"type:int;default:0" json:"rating"` // 0表示未评价，1-5为评价星级
 	Location     string              `gorm:"type:varchar(100);not null;default:'宿舍楼A栋'" json:"location"`
 }
 
-// Notice model
+// Notice 消息通知实体
 type Notice struct {
 	ID        uint           `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time      `gorm:"index" json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
-	UserID    uint           `gorm:"not null;index" json:"user_id"` // Receiver
+	UserID    uint           `gorm:"not null;index" json:"user_id"` // 接收人 ID
 	Message   string         `gorm:"type:text;not null" json:"message"`
 	IsRead    bool           `gorm:"type:boolean;default:false" json:"is_read"`
 }
 
-// InspectionOrder model - kept for completeness
+// InspectionOrder 巡检单实体（备用）
 type InspectionOrder struct {
 	ID          uint           `gorm:"primarykey" json:"id"`
 	CreatedAt   time.Time      `gorm:"index" json:"created_at"`
@@ -83,7 +83,7 @@ type InspectionOrder struct {
 	Comments    string         `gorm:"type:text" json:"comments"`
 }
 
-// Consumable represents a warehouse maintenance material/consumable
+// Consumable 维修物料耗材实体
 type Consumable struct {
 	ID        uint           `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time      `json:"created_at"`
@@ -94,7 +94,7 @@ type Consumable struct {
 	Unit      string         `gorm:"type:varchar(20);not null;default:'个'" json:"unit"`
 }
 
-// WorkOrderConsumable records the consumption of consumables per workorder
+// WorkOrderConsumable 工单消耗耗材记录实体
 type WorkOrderConsumable struct {
 	ID           uint       `gorm:"primarykey" json:"id"`
 	CreatedAt    time.Time  `json:"created_at"`

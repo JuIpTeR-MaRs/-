@@ -18,19 +18,19 @@ import (
 )
 
 func init() {
-	// Set gin to test mode to avoid debugging logs
+	// 将 gin 设置为测试模式以避免调试日志输出
 	gin.SetMode(gin.TestMode)
 }
 
-// setupTest sets up mock configuration, logger, and Casbin enforcer for testing.
-// It returns a cleanup function to restore original globals.
+// setupTest 初始化用于测试的配置、日志和 Casbin 权限管理器
+// 返回一个清理函数以便在测试结束后恢复全局变量
 func setupTest(t *testing.T) func() {
-	// Backup original global variables
+	// 备份原全局变量
 	oldConfig := global.Config
 	oldLogger := global.Logger
 	oldEnforcer := global.Enforcer
 
-	// Mock Configuration
+	// 模拟配置数据
 	global.Config = &config.Config{
 		JWT: config.JWTConfig{
 			Secret: "my-super-secret-test-key-32-characters-long",
@@ -38,16 +38,16 @@ func setupTest(t *testing.T) func() {
 		},
 	}
 
-	// Mock Logger
+	// 模拟日志（空记录器）
 	global.Logger = zap.NewNop()
 
-	// Mock Casbin Enforcer using the project's model file
+	// 使用项目中的模型文件初始化测试用 Casbin 实例
 	enforcer, err := casbin.NewEnforcer("../../config/rbac_model.conf")
 	if err != nil {
 		t.Fatalf("failed to initialize casbin enforcer: %v", err)
 	}
 
-	// Add basic test policies
+	// 添加基本测试策略规则
 	// Matcher rule: g(r.sub, p.sub) && keyMatch2(r.obj, p.obj) && regexMatch(r.act, p.act) || r.sub == "Admin"
 	_, _ = enforcer.AddPolicy("Student", "/api/v1/workorders", "POST")
 	_, _ = enforcer.AddPolicy("Student", "/api/v1/workorders", "GET")
@@ -56,7 +56,7 @@ func setupTest(t *testing.T) func() {
 
 	global.Enforcer = enforcer
 
-	// Return teardown function
+	// 返回清理恢复函数
 	return func() {
 		global.Config = oldConfig
 		global.Logger = oldLogger
@@ -64,18 +64,18 @@ func setupTest(t *testing.T) func() {
 	}
 }
 
-// TestJWTAuth tests the JWT authentication middleware.
+// TestJWTAuth 测试 JWT 认证中间件
 func TestJWTAuth(t *testing.T) {
 	cleanup := setupTest(t)
 	defer cleanup()
 
-	// Helper to generate a valid token
+	// 生成有效 Token 的辅助函数
 	validToken, err := utils.GenerateToken(1, "testuser", "Student")
 	if err != nil {
 		t.Fatalf("failed to generate token: %v", err)
 	}
 
-	// Setup Gin router with the middleware
+	// 初始化带有中间件的 Gin 路由
 	r := gin.New()
 	r.Use(JWTAuth())
 	r.GET("/test-auth", func(c *gin.Context) {
@@ -141,7 +141,7 @@ func TestJWTAuth(t *testing.T) {
 			}
 
 			if !tt.verifyContext {
-				// Parse custom fail response
+				// 解析自定义的失败返回结果
 				var resp response.Response
 				err := json.Unmarshal(w.Body.Bytes(), &resp)
 				if err != nil {
@@ -154,7 +154,7 @@ func TestJWTAuth(t *testing.T) {
 					t.Errorf("expected error message %q, got %q", tt.expectedMsg, resp.Msg)
 				}
 			} else {
-				// Verify context attributes passed successfully to handler
+				// 验证 Context 中传递的属性是否正确
 				var contextData map[string]interface{}
 				err := json.Unmarshal(w.Body.Bytes(), &contextData)
 				if err != nil {
@@ -174,7 +174,7 @@ func TestJWTAuth(t *testing.T) {
 	}
 }
 
-// TestCasbinRBAC tests the Casbin-based RBAC middleware.
+// TestCasbinRBAC 测试基于 Casbin 的 RBAC 权限控制中间件
 func TestCasbinRBAC(t *testing.T) {
 	cleanup := setupTest(t)
 	defer cleanup()
@@ -182,7 +182,7 @@ func TestCasbinRBAC(t *testing.T) {
 	// Setup Gin router
 	r := gin.New()
 	
-	// Middleware to set role dynamically from request header for test flexibility
+	// 从请求头获取角色并动态设置到 Context，方便灵活测试
 	r.Use(func(c *gin.Context) {
 		role := c.GetHeader("Test-Role")
 		if role != "" {
@@ -193,7 +193,7 @@ func TestCasbinRBAC(t *testing.T) {
 	
 	r.Use(CasbinRBAC())
 	
-	// Add test handlers representing RESTful endpoints matching the policies
+	// 注册代表 RESTful API 的测试处理器
 	r.POST("/api/v1/workorders", func(c *gin.Context) {
 		c.Status(http.StatusOK)
 	})

@@ -12,8 +12,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RateLimiterMiddleware implements a Redis-based token bucket rate limiter per client IP.
-// capacity: maximum token capacity, rate: token refill rate per second
+// RateLimiterMiddleware 基于 Redis 令牌桶算法的 IP 限流中间件
+// capacity: 桶的最大容量, rate: 每秒新增令牌速率
 func RateLimiterMiddleware(capacity int64, rate int64) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()

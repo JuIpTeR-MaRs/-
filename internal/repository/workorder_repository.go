@@ -41,6 +41,7 @@ func NewWorkOrderRepository() IWorkOrderRepository {
 	return &WorkOrderRepository{}
 }
 
+// getDB 获取当前上下文对应的 DB 连接，如果是事务环境，则使用事务连接
 func (r *WorkOrderRepository) getDB(ctx context.Context) *gorm.DB {
 	if db, ok := pkgtx.FromContext(ctx); ok {
 		return db
@@ -62,6 +63,7 @@ func (r *WorkOrderRepository) GetOrderByID(ctx context.Context, id uint) (*model
 	return &order, err
 }
 
+// ListOrders 分页查询和过滤工单列表
 func (r *WorkOrderRepository) ListOrders(ctx context.Context, offset, limit int, userID, workerID *uint, status string) ([]model.WorkOrder, int64, error) {
 	var orders []model.WorkOrder
 	var total int64
@@ -92,6 +94,7 @@ func (r *WorkOrderRepository) CreateNotice(ctx context.Context, notice *model.No
 	return r.getDB(ctx).Create(notice).Error
 }
 
+// GetLocationReportStats 统计各个宿舍楼宇的报修工单数
 func (r *WorkOrderRepository) GetLocationReportStats(ctx context.Context) ([]LocationStat, error) {
 	var stats []LocationStat
 	err := r.getDB(ctx).Model(&model.WorkOrder{}).
@@ -102,10 +105,9 @@ func (r *WorkOrderRepository) GetLocationReportStats(ctx context.Context) ([]Loc
 	return stats, err
 }
 
+// GetWorkerEfficiencyStats 计算每个师傅完成工单的平均时效（分钟）
 func (r *WorkOrderRepository) GetWorkerEfficiencyStats(ctx context.Context) ([]WorkerEfficiencyStat, error) {
 	var results []WorkerEfficiencyStat
-	// Select average time between creation (Assigned status created time or order created time) and update (completed time)
-	// Using GORM table builder joining with users to aggregate avg repair time in minutes
 	err := r.getDB(ctx).Table("work_orders").
 		Select("work_orders.worker_id, users.real_name, AVG(TIMESTAMPDIFF(MINUTE, work_orders.created_at, work_orders.updated_at)) as avg_minutes").
 		Joins("JOIN users ON users.id = work_orders.worker_id").

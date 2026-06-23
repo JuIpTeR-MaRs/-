@@ -12,7 +12,7 @@ type traceIDKey struct{}
 const TraceIDHeaderKey = "X-Trace-ID"
 const TraceIDContextKey = "trace_id"
 
-// TraceIDMiddleware injects a trace ID for request correlation tracking
+// TraceIDMiddleware 注入链路追踪 TraceID
 func TraceIDMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := c.GetHeader(TraceIDHeaderKey)
@@ -20,21 +20,21 @@ func TraceIDMiddleware() gin.HandlerFunc {
 			traceID = uuid.New().String()
 		}
 
-		// Inject into gin context
+		// 注入到 gin context
 		c.Set(TraceIDContextKey, traceID)
 
-		// Inject into request's standard context so standard libraries can read it
+		// 注入到标准库的 context 中
 		stdCtx := context.WithValue(c.Request.Context(), traceIDKey{}, traceID)
 		c.Request = c.Request.WithContext(stdCtx)
 
-		// Inject into response header
+		// 在响应头中返回 TraceID
 		c.Writer.Header().Set(TraceIDHeaderKey, traceID)
 
 		c.Next()
 	}
 }
 
-// GetTraceID retrieves the trace ID from a context
+// GetTraceID 从 context 中获取 TraceID
 func GetTraceID(ctx context.Context) string {
 	if ctx == nil {
 		return ""

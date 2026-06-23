@@ -21,7 +21,7 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 )
 
-// InitConfig initializes viper config
+// InitConfig 初始化 Viper 配置
 func InitConfig(configPath string) {
 	viper.SetConfigFile(configPath)
 	if err := viper.ReadInConfig(); err != nil {
@@ -34,7 +34,7 @@ func InitConfig(configPath string) {
 	fmt.Println("Config loaded successfully.")
 }
 
-// InitLogger initializes zap logger
+// InitLogger 初始化 Zap 日志
 func InitLogger() {
 	writeSyncer := getLogWriter()
 	encoder := getEncoder()
@@ -46,7 +46,7 @@ func InitLogger() {
 
 	core := zapcore.NewCore(encoder, writeSyncer, l)
 	
-	// Also log to console in debug mode
+	// 调试模式下也输出到控制台
 	if Config.Server.Mode == "debug" {
 		consoleEncoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
 		core = zapcore.NewTee(
@@ -77,7 +77,7 @@ func getLogWriter() zapcore.WriteSyncer {
 	return zapcore.AddSync(lumberJackLogger)
 }
 
-// InitDB initializes GORM MySQL connection
+// InitDB 初始化 MySQL 数据库连接（使用 GORM）
 func InitDB() {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		Config.MySQL.User,
@@ -106,7 +106,7 @@ func InitDB() {
 		Logger.Fatal("Failed to get sql.DB", zap.Error(err))
 	}
 
-	// Connection Pool Optimization for High Score
+	// 配置连接池优化性能
 	sqlDB.SetMaxIdleConns(Config.MySQL.MaxIdleConns)
 	sqlDB.SetMaxOpenConns(Config.MySQL.MaxOpenConns)
 	sqlDB.SetConnMaxLifetime(1 * time.Hour)
@@ -116,7 +116,7 @@ func InitDB() {
 	Logger.Info("MySQL initialized successfully")
 }
 
-// SeedDefaultConsumables seeds inventory data if the table is empty
+// SeedDefaultConsumables 初始化默认耗材数据
 func SeedDefaultConsumables() {
 	var count int64
 	DB.Model(&model.Consumable{}).Count(&count)
@@ -133,7 +133,7 @@ func SeedDefaultConsumables() {
 	}
 }
 
-// SeedDefaultUsers seeds default user accounts if they don't exist
+// SeedDefaultUsers 初始化默认测试账号
 func SeedDefaultUsers() {
 	users := []model.User{
 		{
@@ -180,7 +180,7 @@ func SeedDefaultUsers() {
 }
 
 
-// InitRedis initializes Redis client
+// InitRedis 初始化 Redis 客户端
 func InitRedis() {
 	client := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", Config.Redis.Host, Config.Redis.Port),
@@ -197,15 +197,15 @@ func InitRedis() {
 	Logger.Info("Redis initialized successfully")
 }
 
-// InitCasbin initializes Casbin enforcer
+// InitCasbin 初始化 Casbin 权限管理器
 func InitCasbin() {
-	// Initialize a Gorm adapter and use it in a Casbin enforcer
+	// 初始化 GORM 适配器
 	adapter, err := gormadapter.NewAdapterByDB(DB)
 	if err != nil {
 		Logger.Fatal("Failed to initialize casbin adapter", zap.Error(err))
 	}
 
-	// Create casbin enforcer
+	// 创建 Casbin 执行器
 	enforcer, err := casbin.NewEnforcer("config/rbac_model.conf", adapter)
 	if err != nil {
 		Logger.Fatal("Failed to create casbin enforcer", zap.Error(err))
@@ -218,7 +218,7 @@ func InitCasbin() {
 
 	Enforcer = enforcer
 	
-	// Automatically seed Casbin policies for RESTful endpoints to prevent access block
+	// 自动初始化 Casbin 策略以防接口被拦截
 	seedCasbinPolicies()
 
 	Logger.Info("Casbin initialized successfully")
@@ -237,7 +237,7 @@ func seedCasbinPolicies() {
 		{"Housemaster", "/api/v1/workorders/:id/assignment", "PUT"},
 		{"Housemaster", "/api/v1/stats/worker-leaderboard", "GET"},
 
-		// New Grab, Completion and Stats Policies
+		// 抢单、完工及统计相关权限策略
 		{"Worker", "/api/v1/workorders/:id/grab", "PUT"},
 		{"Worker", "/api/v1/workorders/:id/completion", "POST"},
 		{"Housemaster", "/api/v1/stats/locations", "GET"},

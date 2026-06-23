@@ -22,7 +22,7 @@
 
     body {
       font-family: 'Inter', sans-serif;
-      /* Premium dark gradient background */
+      /* 深色渐变背景 */
       background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
       color: var(--text-main);
       min-height: 100vh;
@@ -31,7 +31,7 @@
       flex-direction: column;
     }
 
-    /* Abstract shapes for background aesthetics */
+    /* 用于背景装饰的抽象图形 */
     .bg-shape {
       position: absolute;
       border-radius: 50%;
@@ -81,7 +81,7 @@
     .btn.success { background: var(--success); }
     .btn.success:hover { background: #059669; box-shadow: 0 4px 12px rgba(16,185,129,0.4); }
 
-    /* Glass Container */
+    /* 磨砂玻璃效果面板 */
     .glass {
       background: var(--glass-bg);
       backdrop-filter: blur(16px);
@@ -105,7 +105,7 @@
 
     h2 { font-size: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; }
 
-    /* Forms */
+    /* 表单相关样式 */
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-muted); }
     .form-control {
@@ -121,7 +121,7 @@
     .form-control:focus { outline: none; border-color: var(--primary); background: rgba(0,0,0,0.3); }
     textarea.form-control { resize: vertical; min-height: 100px; }
 
-    /* Cards (Orders) */
+    /* 工单列表与卡片 */
     .order-list { display: flex; flex-direction: column; gap: 15px; max-height: 600px; overflow-y: auto; padding-right: 5px; }
     .order-list::-webkit-scrollbar { width: 6px; }
     .order-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
@@ -150,7 +150,7 @@
     .order-content { font-size: 15px; margin-bottom: 12px; line-height: 1.5; }
     .order-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px; }
     
-    /* Leaderboard */
+    /* 排行榜 */
     .leaderboard { display: flex; flex-direction: column; gap: 10px; }
     .lb-item {
       display: flex; align-items: center; justify-content: space-between;
@@ -164,7 +164,7 @@
     .lb-score { display: flex; align-items: center; gap: 5px; color: #fcd34d; }
     .lb-score svg { width: 16px; height: 16px; fill: currentColor; }
 
-    /* Modals */
+    /* 弹窗 */
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.6);
@@ -175,13 +175,13 @@
     .modal-overlay.active { display: flex; opacity: 1; }
     .modal-content { width: 400px; max-width: 90%; }
 
-    /* Utility */
+    /* 辅助类 */
     .hidden { display: none !important; }
     .stars { display: flex; gap: 5px; cursor: pointer; }
     .star { font-size: 24px; color: var(--text-muted); transition: color 0.2s; }
     .star:hover, .star.active { color: #fcd34d; }
 
-    /* Toast */
+    /* 消息提示框 */
     #toast {
       position: fixed; bottom: 30px; right: 30px;
       background: var(--success); color: white;
@@ -198,11 +198,11 @@
 </head>
 <body>
 
-  <!-- Abstract Background -->
+  <!-- 抽象背景图形 -->
   <div class="bg-shape shape1"></div>
   <div class="bg-shape shape2"></div>
 
-  <!-- Header -->
+  <!-- 顶部栏 -->
   <header>
     <h1>智慧宿舍报修大屏</h1>
     <div class="user-info" id="userInfoArea">
@@ -211,10 +211,10 @@
     </div>
   </header>
 
-  <!-- Main Content -->
+  <!-- 主容器 -->
   <div class="main-container">
     
-    <!-- Left Column: Operations -->
+    <!-- 左侧列：操作与排行 -->
     <div class="left-col">
       <div class="glass" id="opPanel">
         <h2>操作控制台</h2>
@@ -223,7 +223,7 @@
           <p>请先登录以解锁操作面板</p>
         </div>
 
-        <!-- Student Form -->
+        <!-- 学生报修表单 -->
         <div id="studentForm" class="hidden">
           <div class="form-group">
             <label>报修内容 (10-200字)</label>
@@ -247,13 +247,13 @@
           <button class="btn" style="width: 100%; margin-top: 10px;" onclick="submitRepair()">🚀 立即提交报修</button>
         </div>
 
-        <!-- Admin Info -->
+        <!-- 宿管/管理员面板 -->
         <div id="adminPanel" class="hidden">
           <p style="color: #9ca3af; margin-bottom: 15px;">您是宿管/管理员，可以在右侧的报修列表中直接进行师傅的指派。</p>
           <button class="btn outline" style="width: 100%;" onclick="loadOrders()">🔄 刷新全校实时工单</button>
         </div>
 
-        <!-- Worker Info -->
+        <!-- 维修工面板 -->
         <div id="workerPanel" class="hidden">
           <p style="color: #9ca3af; margin-bottom: 15px;">您是维修师傅，可以在右侧接单并处理您的专属工单。</p>
           <button class="btn outline" style="width: 100%;" onclick="loadOrders()">🔄 刷新全部工单</button>
@@ -267,7 +267,7 @@
         </div>
       </div>
 
-      <!-- Stats Panel for Admin/Housemaster -->
+      <!-- 宿管与管理员的数据看板 -->
       <div class="glass hidden" id="statsPanel" style="margin-top: 30px;">
         <h2>📊 数据分析看板</h2>
         <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -280,7 +280,7 @@
       </div>
     </div>
 
-    <!-- Right Column: Data Display -->
+    <!-- 右侧列：工单显示大厅 -->
     <div class="right-col">
       <div class="glass" style="height: 100%;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px;">
@@ -301,7 +301,7 @@
     </div>
   </div>
 
-  <!-- Evaluate Modal -->
+  <!-- 学生评价弹窗 -->
   <div class="modal-overlay" id="evalModal">
     <div class="glass modal-content">
       <h2>工单评价打分</h2>
@@ -324,7 +324,7 @@
     </div>
   </div>
 
-  <!-- Complete Order with Consumables Modal -->
+  <!-- 完工并登记耗材弹窗 -->
   <div class="modal-overlay" id="completeModal">
     <div class="glass modal-content" style="width: 450px;">
       <h2>维保完工与物料领用登记</h2>
@@ -353,7 +353,7 @@
     </div>
   </div>
 
-  <!-- Toast -->
+  <!-- 消息提示 -->
   <div id="toast">操作成功</div>
 
   <script>
@@ -365,7 +365,7 @@
     let currentStatsTab = 'location';
     let workersList = [];
 
-    // Toast Notification
+    // 消息提示函数
     function showToast(msg, isError = false) {
       const toast = document.getElementById('toast');
       toast.textContent = msg;
@@ -373,12 +373,12 @@
       setTimeout(() => toast.className = '', 3000);
     }
 
-    // Check auth state immediately
+    // 立即校验登录状态
     if (!currentToken || !currentUser) {
       window.location.href = '/login';
     }
 
-    // Modal Controls
+    // 弹窗控制逻辑
     function openEvalModal(id) { 
       document.getElementById('evalOrderId').value = id;
       currentRating = 5; updateStars(5); // Default 5 stars
@@ -397,7 +397,7 @@
       document.getElementById('completeModal').classList.remove('active');
     }
 
-    // API Helper
+    // 统一 API 请求调用封装
     async function apiCall(endpoint, method = 'GET', body = null) {
       const headers = { 'Content-Type': 'application/json' };
       if (currentToken) headers['Authorization'] = `Bearer ${currentToken}`;
@@ -424,7 +424,7 @@
       window.location.href = '/login';
     }
 
-    // UI Updates
+    // 页面初始化与面板刷新渲染
     function initDashboard() {
       const infoArea = document.getElementById('welcomeText');
       const logoutBtn = document.getElementById('logoutBtn');
@@ -435,7 +435,7 @@
       const statsPanel = document.getElementById('statsPanel');
       const workerTabs = document.getElementById('workerOrderTabs');
 
-      // Reset panels
+      // 重置并隐藏所有控制面板
       loginPrompt.classList.remove('hidden');
       sForm.classList.add('hidden');
       aPanel.classList.add('hidden');
@@ -469,7 +469,7 @@
       }
     }
 
-    // Submit Repair
+    // 学生提交报修工单
     async function submitRepair() {
       const content = document.getElementById('repairContent').value;
       const location = document.getElementById('repairLocation').value;
@@ -484,7 +484,7 @@
       }
     }
 
-    // Load Orders
+    // 加载工单数据列表
     async function loadOrders() {
       let endpoint = '/workorders?page_size=20';
       if (currentUser && currentUser.role === 'Worker' && currentWorkerTab === 'grab') {
@@ -505,7 +505,7 @@
       res.items.forEach(order => {
         let actionHtml = '';
         
-        // Dynamic actions based on role and status
+        // 根据当前用户角色与工单状态动态生成对应的操作按钮
         if ((currentUser.role === 'Admin' || currentUser.role === 'Housemaster') && order.status === '待指派') {
           let optionsHtml = '<option value="">请选择维修师傅</option>';
           workersList.forEach(w => {
@@ -557,7 +557,7 @@
       });
     }
 
-    // Admin Assign
+    // 宿管指派特定维修师傅
     async function assignWorker(orderId, workerId) {
       const res = await apiCall(`/workorders/${orderId}/assignment`, 'PUT', { worker_id: workerId });
       if (res !== null) { showToast('工单指派成功！'); loadOrders(); }
@@ -581,19 +581,19 @@
       await assignWorker(orderId, parseInt(workerId));
     }
 
-    // Worker Update Status
+    // 维修工更新工单状态
     async function updateStatus(orderId, status) {
       const res = await apiCall(`/workorders/${orderId}/status`, 'PUT', { status });
       if (res !== null) { showToast('状态更新成功！'); loadOrders(); }
     }
 
-    // Worker Grab Order
+    // 维修工自助抢单
     async function grabOrder(orderId) {
       const res = await apiCall(`/workorders/${orderId}/grab`, 'PUT');
       if (res !== null) { showToast('🎉 抢单成功！已分配给您。'); loadOrders(); }
     }
 
-    // Worker Complete Order with Consumables
+    // 维修工登记耗材并确认完工
     async function submitComplete() {
       const id = document.getElementById('completeOrderId').value;
       const items = [];
@@ -613,7 +613,7 @@
       }
     }
 
-    // Switch Worker Tab
+    // 切换维修工工单 Tab 页
     function switchWorkerTab(tab) {
       currentWorkerTab = tab;
       const myBtn = document.getElementById('btnMyOrders');
@@ -628,7 +628,7 @@
       loadOrders();
     }
 
-    // Toggle Stats Tab
+    // 切换数据统计 Tab 页
     function toggleStatsTab(tab) {
       currentStatsTab = tab;
       const locBtn = document.getElementById('btnLocationStats');
@@ -684,7 +684,7 @@
       area.innerHTML = html;
     }
 
-    // Star Rating Logic
+    // 星星评价交互逻辑
     const stars = document.querySelectorAll('.star');
     stars.forEach(s => {
       s.addEventListener('click', (e) => updateStars(parseInt(e.target.dataset.val)));
@@ -698,7 +698,7 @@
       document.getElementById('starText').textContent = val + ' 分';
     }
 
-    // Student Evaluate
+    // 学生提交打分评价
     async function submitEval() {
       const id = document.getElementById('evalOrderId').value;
       const res = await apiCall(`/workorders/${id}/evaluations`, 'POST', { rating: currentRating });
@@ -710,7 +710,7 @@
       }
     }
 
-    // Load Leaderboard
+    // 获取金牌维修师傅排行榜
     async function loadLeaderboard() {
       if (!currentUser) return;
       const res = await apiCall('/stats/worker-leaderboard?limit=5');
@@ -740,7 +740,7 @@
       });
     }
 
-    // Init
+    // 初始化执行
     initDashboard();
   </script>
 </body>

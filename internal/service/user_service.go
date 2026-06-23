@@ -36,8 +36,9 @@ type RegisterInput struct {
 	RealName    string `json:"real_name"`
 }
 
+// 用户注册
 func (s *UserService) Register(ctx context.Context, input *RegisterInput) error {
-	// Check if user exists
+	// 检查用户名是否已存在
 	_, err := s.userRepo.GetUserByUsername(ctx, input.Username)
 	if err == nil {
 		return errors.New("username already exists")
@@ -45,6 +46,7 @@ func (s *UserService) Register(ctx context.Context, input *RegisterInput) error 
 		return err
 	}
 
+	// 加密密码
 	hashedPassword, err := utils.HashPassword(input.Password)
 	if err != nil {
 		return err
@@ -71,7 +73,9 @@ type LoginOutput struct {
 	User  *model.User `json:"user"`
 }
 
+// 用户登录，成功后返回 token 和用户信息
 func (s *UserService) Login(ctx context.Context, input *LoginInput) (*LoginOutput, error) {
+	// 获取用户
 	user, err := s.userRepo.GetUserByUsername(ctx, input.Username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -80,10 +84,12 @@ func (s *UserService) Login(ctx context.Context, input *LoginInput) (*LoginOutpu
 		return nil, err
 	}
 
+	// 校验密码
 	if !utils.CheckPasswordHash(input.Password, user.Password) {
 		return nil, errors.New("invalid username or password")
 	}
 
+	// 生成 JWT
 	token, err := utils.GenerateToken(user.ID, user.Username, string(user.Role))
 	if err != nil {
 		return nil, err
@@ -95,10 +101,12 @@ func (s *UserService) Login(ctx context.Context, input *LoginInput) (*LoginOutpu
 	}, nil
 }
 
+// 获取指定 ID 用户信息
 func (s *UserService) GetUserInfo(ctx context.Context, userID uint) (*model.User, error) {
 	return s.userRepo.GetUserByID(ctx, userID)
 }
 
+// 获取系统内所有维修师傅列表
 func (s *UserService) ListWorkers(ctx context.Context) ([]model.User, error) {
 	return s.userRepo.GetUsersByRole(ctx, model.RoleWorker)
 }

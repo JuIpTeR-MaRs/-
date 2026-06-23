@@ -10,19 +10,19 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// HashPassword hashes a plain text password
+// HashPassword 对密码明文进行 bcrypt 哈希加密
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
 }
 
-// CheckPasswordHash compares a plain text password with a hash
+// CheckPasswordHash 比对密码明文和哈希值是否一致
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
 
-// CustomClaims represents custom JWT claims
+// CustomClaims 定义 JWT 载荷结构
 type CustomClaims struct {
 	UserID   uint   `json:"user_id"`
 	Username string `json:"username"`
@@ -30,7 +30,7 @@ type CustomClaims struct {
 	jwt.RegisteredClaims
 }
 
-// GenerateToken generates a new JWT token
+// GenerateToken 生成 JWT 令牌
 func GenerateToken(userID uint, username, role string) (string, error) {
 	expireTime := time.Now().Add(time.Duration(global.Config.JWT.Expire) * time.Second)
 	
@@ -49,7 +49,7 @@ func GenerateToken(userID uint, username, role string) (string, error) {
 	return token.SignedString([]byte(global.Config.JWT.Secret))
 }
 
-// ParseToken parses and validates a JWT token
+// ParseToken 解析并校验 JWT 令牌
 func ParseToken(tokenString string) (*CustomClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(global.Config.JWT.Secret), nil
