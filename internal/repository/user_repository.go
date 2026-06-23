@@ -10,6 +10,7 @@ type IUserRepository interface {
 	CreateUser(ctx context.Context, user *model.User) error
 	GetUserByUsername(ctx context.Context, username string) (*model.User, error)
 	GetUserByID(ctx context.Context, id uint) (*model.User, error)
+	GetUsersByRole(ctx context.Context, role model.RoleEnum) ([]model.User, error)
 }
 
 type UserRepository struct{}
@@ -32,4 +33,10 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id uint) (*model.User,
 	var user model.User
 	err := global.DB.WithContext(ctx).First(&user, id).Error
 	return &user, err
+}
+
+func (r *UserRepository) GetUsersByRole(ctx context.Context, role model.RoleEnum) ([]model.User, error) {
+	var users []model.User
+	err := global.DB.WithContext(ctx).Where("role = ?", role).Find(&users).Error
+	return users, err
 }

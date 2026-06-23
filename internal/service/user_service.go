@@ -15,6 +15,7 @@ type IUserService interface {
 	Register(ctx context.Context, input *RegisterInput) error
 	Login(ctx context.Context, input *LoginInput) (*LoginOutput, error)
 	GetUserInfo(ctx context.Context, userID uint) (*model.User, error)
+	ListWorkers(ctx context.Context) ([]model.User, error)
 }
 
 type UserService struct {
@@ -96,4 +97,8 @@ func (s *UserService) Login(ctx context.Context, input *LoginInput) (*LoginOutpu
 
 func (s *UserService) GetUserInfo(ctx context.Context, userID uint) (*model.User, error) {
 	return s.userRepo.GetUserByID(ctx, userID)
+}
+
+func (s *UserService) ListWorkers(ctx context.Context) ([]model.User, error) {
+	return s.userRepo.GetUsersByRole(ctx, model.RoleWorker)
 }

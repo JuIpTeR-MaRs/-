@@ -127,7 +127,7 @@ type AssignWorkerInput struct {
 }
 
 func (s *WorkOrderService) AssignWorker(ctx context.Context, orderID uint, input *AssignWorkerInput) error {
-	return Transaction(ctx, func(txCtx context.Context) error {
+	err := Transaction(ctx, func(txCtx context.Context) error {
 		order, err := s.workOrderRepo.GetOrderByID(txCtx, orderID)
 		if err != nil {
 			return err
@@ -155,6 +155,11 @@ func (s *WorkOrderService) AssignWorker(ctx context.Context, orderID uint, input
 
 		return nil
 	})
+
+	if err == nil {
+		s.invalidateListCache(ctx)
+	}
+	return err
 }
 
 // -----------------------------------------------------
@@ -212,7 +217,7 @@ func (s *WorkOrderService) GrabWorkOrder(ctx context.Context, orderID uint, work
 		_, _ = global.Redis.Eval(ctx, luaScript, []string{lockKey}, lockVal).Result()
 	}()
 
-	return Transaction(ctx, func(txCtx context.Context) error {
+	err = Transaction(ctx, func(txCtx context.Context) error {
 		order, err := s.workOrderRepo.GetOrderByID(txCtx, orderID)
 		if err != nil {
 			return err
@@ -226,6 +231,11 @@ func (s *WorkOrderService) GrabWorkOrder(ctx context.Context, orderID uint, work
 		order.Status = model.StatusAssigned
 		return s.workOrderRepo.UpdateOrder(txCtx, order)
 	})
+
+	if err == nil {
+		s.invalidateListCache(ctx)
+	}
+	return err
 }
 
 type ConsumableUseInput struct {

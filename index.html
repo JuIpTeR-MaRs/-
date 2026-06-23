@@ -363,6 +363,7 @@
     let currentRating = 0;
     let currentWorkerTab = 'mine';
     let currentStatsTab = 'location';
+    let workersList = [];
 
     // Toast Notification
     function showToast(msg, isError = false) {
@@ -459,8 +460,10 @@
           switchWorkerTab('mine');
         }
 
-        loadOrders();
-        loadLeaderboard();
+        loadWorkers().then(() => {
+          loadOrders();
+          loadLeaderboard();
+        });
       } else {
         window.location.href = '/login';
       }
@@ -504,7 +507,18 @@
         
         // Dynamic actions based on role and status
         if ((currentUser.role === 'Admin' || currentUser.role === 'Housemaster') && order.status === '待指派') {
-          actionHtml = `<button class="btn small success" onclick="assignWorker(${order.id}, 4)">指派给李四(ID:4)</button>`;
+          let optionsHtml = '<option value="">请选择维修师傅</option>';
+          workersList.forEach(w => {
+            optionsHtml += `<option value="${w.id}">${w.real_name || w.username}</option>`;
+          });
+          actionHtml = `
+            <div style="display: inline-flex; gap: 5px; align-items: center;">
+              <select class="form-control" style="width: auto; padding: 4px 8px; font-size: 12px; height: 30px; margin-bottom: 0; background: rgba(0,0,0,0.4); color: white;" id="assignSelect_${order.id}">
+                ${optionsHtml}
+              </select>
+              <button class="btn small success" onclick="doAssign(${order.id})">指派</button>
+            </div>
+          `;
         } 
         else if (currentUser.role === 'Worker' && order.status === '待指派') {
           actionHtml = `<button class="btn small" style="background: var(--warning);" onclick="grabOrder(${order.id})">自主抢单</button>`;
@@ -547,6 +561,24 @@
     async function assignWorker(orderId, workerId) {
       const res = await apiCall(`/workorders/${orderId}/assignment`, 'PUT', { worker_id: workerId });
       if (res !== null) { showToast('工单指派成功！'); loadOrders(); }
+    }
+
+    async function loadWorkers() {
+      const res = await apiCall('/user/workers');
+      if (res) {
+        workersList = res;
+      }
+    }
+
+    async function doAssign(orderId) {
+      const selectEl = document.getElementById(`assignSelect_${orderId}`);
+      if (!selectEl) return;
+      const workerId = selectEl.value;
+      if (!workerId) {
+        showToast('请选择一位维修师傅！', true);
+        return;
+      }
+      await assignWorker(orderId, parseInt(workerId));
     }
 
     // Worker Update Status
@@ -692,9 +724,8 @@
       }
 
       res.forEach((item, index) => {
-        // ID to Name mapping since Redis only stores ID. In real app, join DB or cache names.
-        const nameMap = { '4': '李四维修工' }; 
-        const name = nameMap[item.Member] || `师傅 ID:${item.Member}`;
+        const workerObj = workersList.find(w => String(w.id) === String(item.Member));
+        const name = workerObj ? (workerObj.real_name || workerObj.username) : `师傅 ID:${item.Member}`;
         
         lb.innerHTML += `
           <div class="lb-item">

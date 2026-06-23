@@ -72,3 +72,12 @@ func (ctrl *UserController) GetUserInfo(c *gin.Context) {
 
 	response.Success(c, user)
 }
+
+func (ctrl *UserController) GetWorkers(c *gin.Context) {
+	workers, err := ctrl.userService.ListWorkers(c.Request.Context())
+	if err != nil {
+		response.Fail(c, e.ServerPanic, err.Error())
+		return
+	}
+	response.Success(c, workers)
+}

@@ -51,6 +51,7 @@ func SetupRouter() *gin.Engine {
 		user := protected.Group("/user")
 		{
 			user.GET("/info", userCtrl.GetUserInfo)
+			user.GET("/workers", userCtrl.GetWorkers)
 		}
 
 		// RESTfulized Routes Alignment
